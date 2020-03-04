@@ -9,9 +9,11 @@ import java.util.concurrent.Executors;
 
 public class Server implements Runnable{
 
-    ServerSocket serverSocket = null;
     int portNumber = 1234;
     boolean run = true;
+    int[] clients = new int[10];
+
+    ServerSocket serverSocket = null;
     ExecutorService threadPool = Executors.newFixedThreadPool(10);
 
 
@@ -23,9 +25,8 @@ public class Server implements Runnable{
         try {
             Thread.sleep(20 * 1000);
         } catch (InterruptedException e) {
-            System.out.printf(e.getMessage());
+            System.out.printf(e.getMessage() + "\n");
         }
-//        System.out.printf("Stop server\n");
         server.stop();
     }
 
@@ -33,6 +34,7 @@ public class Server implements Runnable{
     public void run() {
 
         Socket clientSocket = null;
+        int i = 0;
 
         // create socket
         try {
@@ -46,11 +48,13 @@ public class Server implements Runnable{
             try {
                 clientSocket = this.serverSocket.accept();
                 System.out.println("client " + clientSocket.getPort() + " connected");
+                clients[i] = clientSocket.getPort();
+                i++;
             } catch (IOException e) {
                 System.out.printf("Failed to connect client " + clientSocket.getPort() + "\n");
 //                System.out.printf(e.getMessage());
             }
-            this.threadPool.execute(new ClientHandler(clientSocket));
+            this.threadPool.execute(new ClientHandler(clientSocket, clients));
         }
         this.threadPool.shutdown();
         System.out.printf("~~ Server disconnected ~~\n");

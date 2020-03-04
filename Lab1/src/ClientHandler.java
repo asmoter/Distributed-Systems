@@ -4,9 +4,11 @@ import java.net.Socket;
 public class ClientHandler implements Runnable {
 
     public Socket clientSocket = null;
+    public int[] clients;
 
-    public ClientHandler(Socket clientSocket){
+    public ClientHandler(Socket clientSocket, int[] clients){
         this.clientSocket = clientSocket;
+        this.clients = clients;
     }
 
 //    @Override
@@ -17,15 +19,18 @@ public class ClientHandler implements Runnable {
         String msg;
         String response;
 
-        try (PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
-
+//        try (PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
+        try {
+//            for (int i = 0; i < 10; i++) {
+//
+//            }
+            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
             while(clientOn){
                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 int clientID = clientSocket.getPort();
 
                 if((msg = in.readLine()) != null){
                     System.out.println("msg from client " + clientID + " -> " + msg);
-//                    response = "Client ID: ".concat(String.valueOf(clientID)).concat(msg).concat(msg);
                     response = "Client ID: " + clientID + " msg: " + msg;
                     out.println(response);
                 }
