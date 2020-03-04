@@ -4,68 +4,66 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Server implements Runnable{
 
-    Socket socket;
+    ServerSocket serverSocket = null;
+    int portNumber = 1234;
+    boolean run = true;
+    ExecutorService threadPool = Executors.newFixedThreadPool(10);
 
-    Server(Socket clientSocket){
-        this.socket = clientSocket;
-    }
 
     public static void main(String[] args) throws IOException {
 
         System.out.println("JAVA SERVER");
-        int portNumber = 1234;
-        boolean run = true;
-
-        // create socket
-        ServerSocket serverSocket = new ServerSocket(portNumber);
-
-        while(run){
-
-            // accept client
-            Socket clientSocket = serverSocket.accept();
-            System.out.println("client " + clientSocket.getPort() + " connected");
-            new Thread(new Server(clientSocket)).start();
+        Server server = new Server();
+        new Thread(server).start();
+        try {
+            Thread.sleep(20 * 1000);
+        } catch (InterruptedException e) {
+            System.out.printf(e.getMessage());
         }
-//        try{
-//            serverSocket.close();
-//            System.out.printf("Server connection closed successfully\n");
-//        }
-//        catch (Exception e){
-//            System.out.printf("Failed to close server connection\n");
-//        }
+//        System.out.printf("Stop server\n");
+        server.stop();
     }
 
     @Override
     public void run() {
-        // in & out streams
-        boolean clientOn = true;
-        String msg;
-        String response;
 
-        try (PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
+        Socket clientSocket = null;
 
-            while(clientOn){
-                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                int clientID = socket.getPort();
-
-                if((msg = in.readLine()) != null){
-                    System.out.println("msg from client " + clientID + " -> " + msg);
-//                    response = "Client ID: ".concat(String.valueOf(clientID)).concat(msg).concat(msg);
-                    response = "Client ID: " + clientID + " msg: " + msg;
-                    out.println(response);
-                }
-                else{
-                    socket.close();
-                    clientOn = false;
-                    System.out.printf("Client " + socket.getPort() + " disconnected\n");
-                }
-            }
+        // create socket
+        try {
+            this.serverSocket = new ServerSocket(portNumber);
         } catch (IOException e) {
-            System.out.printf("Error " + e.getMessage());
-            System.exit(-1);
+            System.out.printf("Failed to open port " + portNumber);
+            System.out.printf(e.getMessage());
+        }
+        while (run) {
+            // accept client
+            try {
+                clientSocket = this.serverSocket.accept();
+                System.out.println("client " + clientSocket.getPort() + " connected");
+            } catch (IOException e) {
+                System.out.printf("Failed to connect client " + clientSocket.getPort() + "\n");
+//                System.out.printf(e.getMessage());
+            }
+            this.threadPool.execute(new ClientHandler(clientSocket));
+        }
+        this.threadPool.shutdown();
+        System.out.printf("~~ Server disconnected ~~\n");
+    }
+
+    public synchronized void stop() {
+        this.run = false;
+        try {
+            serverSocket.close();
+            System.out.printf("Server connection closed successfully\n");
+        } catch (Exception e) {
+            System.out.printf("Failed to close server connection\n");
+            System.out.printf(e.getMessage());
         }
     }
 }

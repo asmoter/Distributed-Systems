@@ -33,8 +33,7 @@ public class Client {
             try {
                 // create socket
                 socket = new Socket(hostName, portNumber);
-                System.out.printf("Client connected successfully\n");
-
+                System.out.printf("~~ Client connected successfully ~~\n");
                 while(clientOn) {
                     // in & out streams
                     PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
@@ -59,6 +58,7 @@ public class Client {
             } finally {
                 if (socket != null){
                     socket.close();
+                    System.out.printf("~~ Client disconnected ~~\n");
                 }
             }
         }
