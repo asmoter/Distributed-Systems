@@ -1,14 +1,15 @@
 import java.io.*;
 import java.net.Socket;
+import java.sql.Timestamp;
 
 public class ClientHandler implements Runnable {
 
     public Socket clientSocket = null;
-    public int[] clients;
+    public  Socket[] sockets;
 
-    public ClientHandler(Socket clientSocket, int[] clients){
+    public ClientHandler(Socket clientSocket, Socket[] sockets){
         this.clientSocket = clientSocket;
-        this.clients = clients;
+        this.sockets = sockets;
     }
 
 //    @Override
@@ -21,25 +22,51 @@ public class ClientHandler implements Runnable {
 
 //        try (PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
         try {
-//            for (int i = 0; i < 10; i++) {
-//
-//            }
-            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-            while(clientOn){
+            while(clientOn) {
+                
                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 int clientID = clientSocket.getPort();
 
-                if((msg = in.readLine()) != null){
-                    System.out.println("msg from client " + clientID + " -> " + msg);
-                    response = "Client ID: " + clientID + " msg: " + msg;
-                    out.println(response);
+                if((msg = in.readLine()) != null) {
+                    Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+                    System.out.println(timestamp + " msg from  " + clientID + " -> " + msg);
+
+                    for (int i = 0; i < 10; i++) {
+                        if (sockets[i] != clientSocket && sockets[i] != null) {
+                            PrintWriter out = new PrintWriter(sockets[i].getOutputStream(), true);
+                            response = clientID + ": " + msg;
+                            out.println(response);
+                        }
+                    }
                 }
                 else{
+
                     clientSocket.close();
                     clientOn = false;
                     System.out.printf("Client " + clientSocket.getPort() + " disconnected\n");
                 }
             }
+
+//            for (int i = 0; i < 10; i++) {
+//                if(sockets[i] != clientSocket && sockets[i] != null){
+//                    PrintWriter out = new PrintWriter(sockets[i].getOutputStream(), true);
+//                    while(clientOn){
+//                        BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+//                        int clientID = clientSocket.getPort();
+//
+//                        if((msg = in.readLine()) != null){
+//                            System.out.println("msg from client " + clientID + " -> " + msg);
+//                            response = "Client ID: " + clientID + " msg: " + msg;
+//                            out.println(response);
+//                        }
+//                        else{
+//                            clientSocket.close();
+//                            clientOn = false;
+//                            System.out.printf("Client " + clientSocket.getPort() + " disconnected\n");
+//                        }
+//                    }
+//                }
+//            }
         } catch (IOException e) {
             System.out.printf("Error " + e.getMessage());
             System.exit(-1);

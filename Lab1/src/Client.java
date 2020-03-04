@@ -29,6 +29,7 @@ public class Client {
             String hostName = "localhost";
             Socket socket = null;
             String msg;
+            String response;
 
             try {
                 // create socket
@@ -37,19 +38,20 @@ public class Client {
                 while(clientOn) {
                     // in & out streams
                     PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-                    BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                    BufferedReader obj = new BufferedReader(new InputStreamReader(System.in)); // czytanie z konsoli
+                    BufferedReader ser_in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    BufferedReader con_in = new BufferedReader(new InputStreamReader(System.in)); // czytanie z konsoli
 
                     // send msg, read response
-                    System.out.printf("Message: ");
-                    msg = obj.readLine();
+
+                    System.out.printf("Me: ");
+                    msg = con_in.readLine();
                     if(msg.equals("Exit")){
                         clientOn = false;
                     }
                     else{
                         out.println(msg);
-                        String response = in.readLine();
-                        System.out.println("Received response: " + response);
+                        response = ser_in.readLine();
+                        System.out.println(response);
                     }
                 }
             } catch (Exception e) {
