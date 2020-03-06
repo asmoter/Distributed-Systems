@@ -75,17 +75,6 @@ public class Client {
                 sendMsg.start();
                 listen.start();
 
-//                    System.out.printf("Me: ");
-//                    msg = con_in.readLine();
-//                    if(msg.equals("Exit")){
-//                        clientOn = false;
-//                    }
-//                    else{
-//                        out.println(msg);
-//                        response = ser_in.readLine();
-//                        System.out.println(response);
-//                    }
-//                }
             } catch (Exception e) {
                 System.out.printf("Failed to connect\n");
                 e.printStackTrace();
