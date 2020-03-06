@@ -11,7 +11,6 @@ public class Server implements Runnable{
 
     int portNumber = 1234;
     boolean run = true;
-    int[] clients = new int[10];
     Socket[] sockets = new Socket[10];
 
     ServerSocket serverSocket = null;
@@ -48,12 +47,11 @@ public class Server implements Runnable{
             // accept client
             try {
                 clientSocket = this.serverSocket.accept();
-                System.out.println("client " + clientSocket.getPort() + " connected");
                 sockets[i] = clientSocket;
                 i++;
+                System.out.println("client C" + i + " connected");
             } catch (IOException e) {
                 System.out.printf("Failed to connect client " + clientSocket.getPort() + "\n");
-//                System.out.printf(e.getMessage());
             }
             this.threadPool.execute(new ClientHandler(clientSocket, sockets));
         }
