@@ -37,6 +37,7 @@ public class ClientHandler implements Runnable {
                     Timestamp timestamp = new Timestamp(System.currentTimeMillis());
                     System.out.println(timestamp + " msg from C" + clientID + " -> " + msg);
 
+
                     for (int i = 0; i < 10; i++) {
                         if (sockets[i] != clientSocket && sockets[i] != null) {
                             PrintWriter out = new PrintWriter(sockets[i].getOutputStream(), true);
@@ -46,12 +47,12 @@ public class ClientHandler implements Runnable {
                     }
                 }
                 else{
+
                     clientSocket.close();
                     clientOn = false;
                     System.out.printf("Client C" + clientID + " disconnected\n");
                 }
             }
-
         } catch (IOException e) {
             System.out.printf("Error " + e.getMessage());
             System.exit(-1);
