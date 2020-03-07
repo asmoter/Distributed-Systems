@@ -1,16 +1,20 @@
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.io.InputStreamReader;
+import java.net.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Server implements Runnable{
 
-    int portNumber = 1234;
-    boolean run = true;
-    Socket[] sockets = new Socket[10];
+    private int port = 1234;
+    private boolean run = true;
+    Socket[] tcp_sockets = new Socket[5];
+    DatagramPacket[] udp_packets = new DatagramPacket[5];
 
-    ServerSocket serverSocket = null;
+    ServerSocket serverSocketTCP = null;
+    DatagramSocket serverSocketUDP = null;
+
     ExecutorService threadPool = Executors.newFixedThreadPool(10);
 
 
@@ -30,27 +34,34 @@ public class Server implements Runnable{
     @Override
     public void run() {
 
-        Socket clientSocket = null;
+        Socket clientSocketTCP = null;
         int i = 0;
 
         // create socket
         try {
-            this.serverSocket = new ServerSocket(portNumber);
+            this.serverSocketTCP = new ServerSocket(port); // create TCP server
+            this.serverSocketUDP = new DatagramSocket(port); // create UDP server
         } catch (IOException e) {
-            System.out.printf("Failed to open port " + portNumber);
+            System.out.printf("Failed to open port " + port);
             System.out.printf(e.getMessage());
         }
         while (run) {
             // accept client
             try {
-                clientSocket = this.serverSocket.accept();
-                sockets[i] = clientSocket;
+                clientSocketTCP = this.serverSocketTCP.accept();
+                tcp_sockets[i] = clientSocketTCP;
+
+                byte[] buff = new byte[256];
+                DatagramPacket packet = new DatagramPacket(buff, buff.length);
+                serverSocketUDP.receive(packet);
+                udp_packets[i] = packet;
                 i++;
                 System.out.println("client C" + i + " connected");
+
             } catch (IOException e) {
-                System.out.printf("Failed to connect client " + clientSocket.getPort() + "\n");
+                System.out.printf("Failed to connect client " + clientSocketTCP.getPort() + "\n");
             }
-            this.threadPool.execute(new ClientHandler(clientSocket, sockets));
+            this.threadPool.execute(new ClientHandler(clientSocketTCP, tcp_sockets, serverSocketUDP, udp_packets));
         }
         this.threadPool.shutdown();
         System.out.printf("~~ Server disconnected ~~\n");
@@ -59,7 +70,7 @@ public class Server implements Runnable{
     public synchronized void stop() {
         this.run = false;
         try {
-            serverSocket.close();
+            serverSocketTCP.close();
             System.out.printf("Server connection closed successfully\n");
         } catch (Exception e) {
             System.out.printf("Failed to close server connection\n");
