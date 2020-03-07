@@ -12,10 +12,10 @@ public class Client {
         int port = 1234;
         String hostName = "localhost";
 
-        boolean clientOn = true;
         Socket tcp_socket = null;
-
         DatagramSocket udp_socket = null;
+
+        String asciiArt = "";
 
         try {
 
@@ -24,7 +24,7 @@ public class Client {
 
             udp_socket = new DatagramSocket();
             InetAddress address = InetAddress.getByName("localhost");
-            byte[] buff = "hi".getBytes();
+            byte[] buff = "udp init".getBytes();
 
             DatagramPacket packet = new DatagramPacket(buff, buff.length, address, port);
             udp_socket.send(packet);
@@ -36,7 +36,7 @@ public class Client {
             BufferedReader ser_in = new BufferedReader(new InputStreamReader(tcp_socket.getInputStream()));
             BufferedReader con_in = new BufferedReader(new InputStreamReader(System.in)); // czytanie z konsoli
 
-            // send msg, read response
+
             DatagramSocket finalUdp_socket = udp_socket;
             Thread sendMsg = new Thread(new Runnable() {
                 @Override
@@ -48,16 +48,14 @@ public class Client {
                             if (msg.equals("U")) {
                                 System.out.printf("~~ switched to UDP ~~\n");
                                 System.out.printf("Me: ");
-                                out.println(msg); // info do servera, ze sie przerzucamy na udp
 
                                 byte[] buff = con_in.readLine().getBytes();
 
                                 DatagramPacket packet = new DatagramPacket(buff, buff.length, address, port);
-//                                String received = new String(packet.getData(), 0, packet.getLength());
-//                                System.out.printf(received + "\n");
                                 finalUdp_socket.send(packet);
                                 System.out.printf("~~ switched to TCP ~~\n");
-                            } else {
+                            }
+                            else{
                                 out.println(msg); // sending TCP message
                             }
                         } catch (IOException e) {
@@ -67,24 +65,36 @@ public class Client {
                 }
             });
 
-            DatagramSocket final_Udp_socket = udp_socket;
-            Thread listen = new Thread(new Runnable() {
+
+//            DatagramSocket final_Udp_socket = udp_socket;
+            Thread listenTCP = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     while (true) {
                         try {
                             String msg = ser_in.readLine();
-                            if (msg.equals("U")) {
-                                byte[] buff = new byte[512];
-                                DatagramPacket packet = new DatagramPacket(buff, buff.length);
-                                final_Udp_socket.receive(packet);
-                                System.out.print("\b\b\b\b");
-                                String received = new String(packet.getData(), 0, packet.getLength());
-                                System.out.printf(received + "\n");
-                            } else {
-                                System.out.print("\b\b\b\b");
-                                System.out.println(msg);
-                            }
+                            System.out.print("\b\b\b\b");
+                            System.out.println(msg);
+                            System.out.printf("Me: ");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+
+            DatagramSocket final_Udp_socket = udp_socket;
+            Thread listenUDP = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (true) {
+                        try {
+                            byte[] buff = new byte[512];
+                            DatagramPacket packet = new DatagramPacket(buff, buff.length);
+                            final_Udp_socket.receive(packet);
+                            System.out.print("\b\b\b\b");
+                            String received = new String(packet.getData(), 0, packet.getLength());
+                            System.out.printf(received + "\n");
                             System.out.printf("Me: ");
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -94,7 +104,8 @@ public class Client {
             });
 
             sendMsg.start();
-            listen.start();
+            listenTCP.start();
+            listenUDP.start();
 
 
         } catch (Exception e) {

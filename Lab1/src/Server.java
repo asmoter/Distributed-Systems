@@ -1,6 +1,4 @@
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -15,7 +13,8 @@ public class Server implements Runnable{
     ServerSocket serverSocketTCP = null;
     DatagramSocket serverSocketUDP = null;
 
-    ExecutorService threadPool = Executors.newFixedThreadPool(10);
+    ExecutorService threadPoolTCP = Executors.newFixedThreadPool(5);
+    ExecutorService threadPoolUDP = Executors.newFixedThreadPool(5);
 
 
     public static void main(String[] args){
@@ -51,19 +50,18 @@ public class Server implements Runnable{
                 clientSocketTCP = this.serverSocketTCP.accept();
                 tcp_sockets[i] = clientSocketTCP;
 
-                byte[] buff = new byte[256];
-                DatagramPacket packet = new DatagramPacket(buff, buff.length);
-                serverSocketUDP.receive(packet);
-                udp_packets[i] = packet;
                 i++;
+
                 System.out.println("client C" + i + " connected");
 
             } catch (IOException e) {
                 System.out.printf("Failed to connect client " + clientSocketTCP.getPort() + "\n");
             }
-            this.threadPool.execute(new ClientHandler(clientSocketTCP, tcp_sockets, serverSocketUDP, udp_packets));
+            this.threadPoolTCP.execute(new tcpHandler(clientSocketTCP, tcp_sockets));
+            this.threadPoolUDP.execute(new udpHandler(serverSocketUDP, udp_packets));
         }
-        this.threadPool.shutdown();
+        this.threadPoolTCP.shutdown();
+        this.threadPoolUDP.shutdown();
         System.out.printf("~~ Server disconnected ~~\n");
     }
 
