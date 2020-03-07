@@ -15,7 +15,16 @@ public class Client {
         Socket tcp_socket = null;
         DatagramSocket udp_socket = null;
 
-        String asciiArt = "";
+        StringBuilder asciiArt = new StringBuilder();
+
+        asciiArt.append("\n" + "        _    .  ,   .           .\n" +
+                "    *  / \\_ *  / \\_      _  *        *   /\\'__        *\n" +
+                "      /    \\  /    \\,   ((        .    _/  /  \\  *'.\n" +
+                " .   /\\/\\  /\\/ :' __ \\_  `          _^/  ^/    `--.\n" +
+                "    /    \\/  \\  _/  \\-'\\      *    /.' ^_   \\_   .'\\  *\n" +
+                "  /\\  .-   `. \\/     \\ /==~=-=~=-=-;.  _/ \\ -. `_/   \\ \n" +
+                " /  `-.__ ^   / .-'.--\\ =-=~_=-=~=^/  _ `--./ .-'  `-\n" +
+                "/        `.  / /       `.~-^=-=~=^=.-'      '-._ `._\n");
 
         try {
 
@@ -50,8 +59,12 @@ public class Client {
                                 System.out.printf("Me: ");
 
                                 byte[] buff = con_in.readLine().getBytes();
-
                                 DatagramPacket packet = new DatagramPacket(buff, buff.length, address, port);
+                                String received = new String(packet.getData(), 0, packet.getLength());
+                                if(received.equals("")){
+                                    buff = asciiArt.toString().getBytes();
+                                    packet = new DatagramPacket(buff, buff.length, address, port);
+                                }
                                 finalUdp_socket.send(packet);
                                 System.out.printf("~~ switched to TCP ~~\n");
                             }

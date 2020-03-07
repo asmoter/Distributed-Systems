@@ -26,7 +26,7 @@ public class udpHandler implements Runnable {
         try {
             while(clientOn) {
 
-                byte[] buff = new byte[256]; // buffer do udp
+                byte[] buff = new byte[512]; // buffer do udp
 
                 Timestamp timestamp = new Timestamp(System.currentTimeMillis());
                 DatagramPacket packet = new DatagramPacket(buff, buff.length);
@@ -52,7 +52,7 @@ public class udpHandler implements Runnable {
 
                     for(int i = 0; i < 5; i++){
                         if(packets[i] != null && packets[i].getPort() != senderPort){
-                            response = "C" + clientID + "_udp: " + msg; // packet.getPort()
+                            response = "C" + clientID + "_udp: " + msg;
                             buff = response.getBytes();
                             packet = new DatagramPacket(buff, buff.length, packets[i].getAddress(), packets[i].getPort());
                             udpSocket.send(packet);
