@@ -5,15 +5,14 @@ import java.sql.Timestamp;
 
 public class udpHandler implements Runnable {
 
-    public DatagramSocket udpSocket = null;
-    public DatagramPacket[] packets;
+    private DatagramSocket serverSocketUDP = null;
+    private DatagramPacket[] packets;
 
-    public udpHandler(DatagramSocket udpS, DatagramPacket[] packets){
-        this.udpSocket = udpS;
+    public udpHandler(DatagramSocket udpSocket, DatagramPacket[] packets){
+        this.serverSocketUDP = udpSocket;
         this.packets = packets;
     }
 
-    //    @Override
     public void run() {
 
         // in & out streams
@@ -28,7 +27,7 @@ public class udpHandler implements Runnable {
 
                 Timestamp timestamp = new Timestamp(System.currentTimeMillis());
                 DatagramPacket packet = new DatagramPacket(buff, buff.length);
-                udpSocket.receive(packet); // odbior pakietu, ktory przyszedl do serwera
+                serverSocketUDP.receive(packet); // odbior pakietu, ktory przyszedl do serwera
 
                 msg = new String(packet.getData(), 0, packet.getLength());
 
@@ -44,18 +43,18 @@ public class udpHandler implements Runnable {
                         if(packets[i] != null && packets[i].getPort() != senderPort){
                             buff = msg.getBytes();
                             packet = new DatagramPacket(buff, buff.length, packets[i].getAddress(), packets[i].getPort());
-                            udpSocket.send(packet);
+                            serverSocketUDP.send(packet);
                         }
                     }
                 }
             }
         } catch (IOException e) {
-            System.out.printf("Error " + e.getMessage());
+            System.out.print("Error " + e.getMessage());
             System.exit(-1);
         }
     }
 
-    public static void main(String args[]){
-        System.out.printf("Hi!\n");
+    public static void main(String[] args){
+        System.out.print("Hi!\n");
     }
 }

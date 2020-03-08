@@ -7,14 +7,14 @@ public class Server implements Runnable{
 
     private int port = 1234;
     private boolean run = true;
-    Socket[] tcp_sockets = new Socket[5];
-    DatagramPacket[] udp_packets = new DatagramPacket[5];
+    private Socket[] tcp_sockets = new Socket[5];
+    private DatagramPacket[] udp_packets = new DatagramPacket[5];
 
-    ServerSocket serverSocketTCP = null;
-    DatagramSocket serverSocketUDP = null;
+    private ServerSocket serverSocketTCP = null;
+    private DatagramSocket serverSocketUDP = null;
 
-    ExecutorService threadPoolTCP = Executors.newFixedThreadPool(5);
-    ExecutorService threadPoolUDP = Executors.newFixedThreadPool(5);
+    private ExecutorService threadPoolTCP = Executors.newFixedThreadPool(5);
+    private ExecutorService threadPoolUDP = Executors.newFixedThreadPool(5);
 
 
     public static void main(String[] args){
@@ -25,7 +25,7 @@ public class Server implements Runnable{
         try {
             Thread.sleep(1000 * 1000);
         } catch (InterruptedException e) {
-            System.out.printf(e.getMessage() + "\n");
+            System.out.print(e.getMessage() + "\n");
         }
         server.stop();
     }
@@ -40,8 +40,8 @@ public class Server implements Runnable{
             this.serverSocketTCP = new ServerSocket(port); // create TCP server
             this.serverSocketUDP = new DatagramSocket(port); // create UDP server
         } catch (IOException e) {
-            System.out.printf("Failed to open port " + port);
-            System.out.printf(e.getMessage());
+            System.out.print("Failed to open port " + port);
+            System.out.print(e.getMessage());
         }
         while (run) {
             // accept client
@@ -53,24 +53,24 @@ public class Server implements Runnable{
                 System.out.println("client C" + i + " connected");
 
             } catch (IOException e) {
-                System.out.printf("Failed to connect client " + clientSocketTCP.getPort() + "\n");
+                System.out.print("Failed to connect client\n");
             }
             this.threadPoolTCP.execute(new tcpHandler(clientSocketTCP, tcp_sockets));
             this.threadPoolUDP.execute(new udpHandler(serverSocketUDP, udp_packets));
         }
         this.threadPoolTCP.shutdown();
         this.threadPoolUDP.shutdown();
-        System.out.printf("~~ Server disconnected ~~\n");
+        System.out.print("~~ Server disconnected ~~\n");
     }
 
-    public synchronized void stop() {
+    private synchronized void stop() {
         this.run = false;
         try {
             serverSocketTCP.close();
-            System.out.printf("Server connection closed successfully\n");
+            System.out.print("Server connection closed successfully\n");
         } catch (Exception e) {
-            System.out.printf("Failed to close server connection\n");
-            System.out.printf(e.getMessage());
+            System.out.print("Failed to close server connection\n");
+            System.out.print(e.getMessage());
         }
     }
 }

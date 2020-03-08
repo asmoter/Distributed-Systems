@@ -4,15 +4,14 @@ import java.sql.Timestamp;
 
 public class tcpHandler implements Runnable {
 
-    public Socket tcpClientSocket = null;
-    public Socket[] sockets;
+    private Socket clientSocketTCP = null;
+    private Socket[] sockets;
 
     public tcpHandler(Socket tcpCS, Socket[] sockets){
-        this.tcpClientSocket = tcpCS;
+        this.clientSocketTCP = tcpCS;
         this.sockets = sockets;
     }
 
-    //    @Override
     public void run() {
 
         boolean clientOn = true;
@@ -20,14 +19,13 @@ public class tcpHandler implements Runnable {
         String response;
         int clientID = -1;
 
-
         try {
             while(clientOn) {
 
-                BufferedReader in = new BufferedReader(new InputStreamReader(tcpClientSocket.getInputStream()));
+                BufferedReader in = new BufferedReader(new InputStreamReader(clientSocketTCP.getInputStream()));
 
                 for(int i = 0; i < 5; i++){
-                    if(sockets[i] == tcpClientSocket){
+                    if(sockets[i] == clientSocketTCP){
                         clientID = i+1;
                         PrintWriter outInit = new PrintWriter(sockets[i].getOutputStream(), true);
                         response = "ID: C" + clientID;
@@ -40,25 +38,25 @@ public class tcpHandler implements Runnable {
                     System.out.println(timestamp + " tcp msg from " + msg);
 
                     for (int i = 0; i < 5; i++) {
-                        if (sockets[i] != tcpClientSocket && sockets[i] != null) {
+                        if (sockets[i] != clientSocketTCP && sockets[i] != null) {
                             PrintWriter out = new PrintWriter(sockets[i].getOutputStream(), true);
                             out.println(msg);
                         }
                     }
                 }
                 else{
-                    tcpClientSocket.close();
+                    clientSocketTCP.close();
                     clientOn = false;
-                    System.out.printf("Client C" + clientID + " disconnected\n");
+                    System.out.print("Client C" + clientID + " disconnected\n");
                 }
             }
         } catch (IOException e) {
-            System.out.printf("Error " + e.getMessage());
+            System.out.print("Error " + e.getMessage());
             System.exit(-1);
         }
     }
 
-    public static void main(String args[]){
-        System.out.printf("Hi!\n");
+    public static void main(String[] args){
+        System.out.print("Hi!\n");
     }
 }
