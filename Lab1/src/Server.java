@@ -36,7 +36,6 @@ public class Server implements Runnable{
         Socket clientSocketTCP = null;
         int i = 0;
 
-        // create socket
         try {
             this.serverSocketTCP = new ServerSocket(port); // create TCP server
             this.serverSocketUDP = new DatagramSocket(port); // create UDP server
@@ -51,7 +50,6 @@ public class Server implements Runnable{
                 tcp_sockets[i] = clientSocketTCP;
 
                 i++;
-
                 System.out.println("client C" + i + " connected");
 
             } catch (IOException e) {

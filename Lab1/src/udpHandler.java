@@ -19,8 +19,6 @@ public class udpHandler implements Runnable {
         // in & out streams
         boolean clientOn = true;
         String msg;
-        String response;
-        int clientID = -1;
         int j = 0;
 
         try {
@@ -39,21 +37,12 @@ public class udpHandler implements Runnable {
                     j++;
                 }
                 else{
-
                     int senderPort = packet.getPort();
-
-                    for(int i = 0; i < 5; i++){
-                        if(packets[i] != null && packets[i].getPort() == senderPort){
-                            clientID = i+1;
-                        }
-                    }
-
-                    System.out.println(timestamp + " udp msg from C" + clientID + " -> " + msg);
+                    System.out.println(timestamp + " udp msg from " + msg);
 
                     for(int i = 0; i < 5; i++){
                         if(packets[i] != null && packets[i].getPort() != senderPort){
-                            response = "C" + clientID + "_udp: " + msg;
-                            buff = response.getBytes();
+                            buff = msg.getBytes();
                             packet = new DatagramPacket(buff, buff.length, packets[i].getAddress(), packets[i].getPort());
                             udpSocket.send(packet);
                         }

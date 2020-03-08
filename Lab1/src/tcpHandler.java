@@ -15,7 +15,6 @@ public class tcpHandler implements Runnable {
     //    @Override
     public void run() {
 
-        // in & out streams
         boolean clientOn = true;
         String msg;
         String response;
@@ -30,18 +29,20 @@ public class tcpHandler implements Runnable {
                 for(int i = 0; i < 5; i++){
                     if(sockets[i] == tcpClientSocket){
                         clientID = i+1;
+                        PrintWriter outInit = new PrintWriter(sockets[i].getOutputStream(), true);
+                        response = "ID: C" + clientID;
+                        outInit.println(response);
                     }
                 }
 
                 if((msg = in.readLine()) != null) {
                     Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-                    System.out.println(timestamp + " tcp msg from C" + clientID + " -> " + msg);
+                    System.out.println(timestamp + " tcp msg from " + msg);
 
                     for (int i = 0; i < 5; i++) {
                         if (sockets[i] != tcpClientSocket && sockets[i] != null) {
                             PrintWriter out = new PrintWriter(sockets[i].getOutputStream(), true);
-                            response = "C" + clientID + "_tcp: " + msg;
-                            out.println(response);
+                            out.println(msg);
                         }
                     }
                 }
