@@ -89,6 +89,7 @@ public class Client {
                             else if(msg.equals("M")){
                                 System.out.printf("~~ switched to UDP Multicast ~~\n");
                                 System.out.printf("Me: ");
+                                finalMult_socket.leaveGroup(group_address);
                                 byte[] buff = con_in.readLine().getBytes();
                                 DatagramPacket packet = new DatagramPacket(buff, buff.length, group_address, portMult);
                                 String received = new String(packet.getData(), 0, packet.getLength());
@@ -96,6 +97,7 @@ public class Client {
                                 buff = msg.getBytes();
                                 packet = new DatagramPacket(buff, buff.length, group_address, portMult);
                                 finalMult_socket.send(packet);
+                                finalMult_socket.joinGroup(group_address);
                                 System.out.printf("~~ switched to TCP ~~\n");
                             }
 
