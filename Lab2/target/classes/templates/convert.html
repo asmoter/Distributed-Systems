@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title> Convert </title>
+</head>
+<body>
+<h1> Converted </h1>
+<h2 th:text="'from ' + ${from} + ' to ' + ${to}"></h2>
+<ul style="list-style-type:square;">
+    <li th:text="'AVG = ' + ${avg}"></li><br>
+    <li th:text="'MIN = ' + ${min}"></li><br>
+    <li th:text="'MAX = ' + ${max}"></li><br>
+    <li th:text="'RANGE = ' + ${rng}"></li><br>
+    <li th:text="'MEDIAN = ' + ${med}"></li><br>
+</ul>
+<input type="button" value="back" onclick="history.back()">
+</body>
+</html>
