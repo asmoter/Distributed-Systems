@@ -8,18 +8,22 @@ public class Service {
         this.passaneger_transport = false;
         this.cargo_transport = false;
         this.launch_satellite = false;
-        if(type.equals("PT")){
+        if(type.equals("PT") || type.equals("pt")){
             this.passaneger_transport = true;
         }
-        else if(type.equals("CT")){
+        else if(type.equals("CT") || type.equals("ct")){
             this.cargo_transport = true;
         }
-        else if(type.equals("LS")){
+        else if(type.equals("LS") || type.equals("ls")){
             this.launch_satellite = true;
         }
         else{
-            throw new Exception("Incorrect service type. Choose one of available: PT, CT, LS\n");
+            System.out.println("Incorrect service type. Choose one of available: PT, CT, LS");
         }
+    }
+
+    public boolean isValid(){ // trzeba zmienic nazwe chyba
+        return passaneger_transport || cargo_transport || launch_satellite;
     }
 
     public boolean isPassaneger_transport() {

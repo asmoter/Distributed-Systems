@@ -3,6 +3,7 @@ import com.rabbitmq.client.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 
 public class Transporter {
 
@@ -17,15 +18,15 @@ public class Transporter {
 
     public static void main(String[] argv) throws Exception {
 
-        initialize_connection();
-        initialize_transporter();
-        initialize_services();
-        initialize_queues();
+        initializeConnection();
+        initializeTransporter();
+        initializeServices();
+        initializeQueues();
 
-        process_comission();
+        processComissions();
     }
 
-    private static void initialize_connection() throws Exception {
+    private static void initializeConnection() throws Exception {
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
         Connection connection = factory.newConnection();
@@ -34,63 +35,54 @@ public class Transporter {
         channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.TOPIC);
     }
 
-    private static void initialize_transporter() throws IOException {
+    private static void initializeTransporter() throws IOException {
 
         System.out.println("Enter company name: ");
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         COMPANY_NAME = br.readLine();
-        System.out.println("Transporter \"" + COMPANY_NAME + "\" connected");
+        System.out.println("Transporter \"" + COMPANY_NAME + "\" connected\n");
     }
 
-
-    private static void initialize_services() {
+    private static void initializeServices() {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         System.out.print("Enter available services: \n" +
                 "\t PT - passanger transport\n" +
                 "\t CT - cargo transport\n" +
                 "\t LS - launch satellite\n");
-        try {
-            service_1 = new Service(br.readLine());
-            System.out.println("Service 1: " + service_1.getType());
-            service_2 = new Service(br.readLine());
-            System.out.println("Servive 2: " + service_2.getType());
+        try{
+            do{
+                System.out.print("Enter service 1: ");
+                service_1 = new Service(br.readLine());
+            }
+            while(!service_1.isValid());
+            do{
+                System.out.print("Enter service 2: ");
+                service_2 = new Service(br.readLine());
+            }
+            while(!service_2.isValid());
+            System.out.println("Service 1: " + service_1.getType() +
+                    "\nServive 2: " + service_2.getType() + "\n");
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-
-    private static void queues() throws IOException {
-        channel.queueDeclare(QUEUE_NAME_1, false, false, false, null);
-//        System.out.println("Commision Key: // nr zlecenia");
-        System.out.print("Binding key queue 1: ");
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        String bindingKey1 = br.readLine();
-        channel.queueBind(QUEUE_NAME_1, EXCHANGE_NAME, bindingKey1);
-        channel.queueDeclare(QUEUE_NAME_2, false, false, false, null);
-        System.out.print("Binding key queue 1: ");
-        String bindingKey2 = br.readLine();
-        channel.queueBind(QUEUE_NAME_2, EXCHANGE_NAME, bindingKey2);
-
-    }
-
-
-    private static void initialize_queues() throws IOException {
+    private static void initializeQueues() throws IOException {
         get_queue_names();
 
         channel.queueDeclare(QUEUE_NAME_1, true, false, false, null);
-        String bindingKey1 = service_1.getType();
+        String bindingKey1 = "transporter." + service_1.getType();
         channel.queueBind(QUEUE_NAME_1, EXCHANGE_NAME, bindingKey1);
 
         channel.queueDeclare(QUEUE_NAME_2, true, false, false, null);
-        String bindingKey2 = service_2.getType();
+        String bindingKey2 = "transporter." + service_2.getType();
         channel.queueBind(QUEUE_NAME_2, EXCHANGE_NAME, bindingKey2);
 
         channel.basicQos(1);
 //        channel.queueDeclare("adminmode" + name, true, true, true, null).getQueue(); //queue for admin mode
 //        channel.queueBind("adminmode" + name, EXCHANGE_NAME, "carriers");
 
-        System.out.print("Initialized queues: \n" +
+        System.out.println("Initialized queues: \n" +
                 "1) " + QUEUE_NAME_1 + " - key: " + bindingKey1 + "\n" +
                 "2) " + QUEUE_NAME_2 + " - key: " + bindingKey2 + "\n");
     }
@@ -100,20 +92,50 @@ public class Transporter {
         QUEUE_NAME_2 = service_2.getType() + "_queue";
     }
 
-    private static void process_comission() throws IOException {
+    private static void processComissions() throws IOException {
+
         Consumer consumer = new DefaultConsumer(channel) {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                 String message = new String(body, "UTF-8");
                 System.out.println("Received: " + message);
+                channel.basicAck(envelope.getDeliveryTag(), false);
+                try {
+                    processAcknowledgement(message);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         };
 
         // start listening
         System.out.println("Waiting for messages...");
-        channel.basicConsume(QUEUE_NAME_1, false, consumer);
-        channel.basicConsume(QUEUE_NAME_2, true, consumer);
+        channel.basicConsume(QUEUE_NAME_1, false, consumer); // true?
+        channel.basicConsume(QUEUE_NAME_2, false, consumer); // true?
+
     }
+
+
+    private static void processAcknowledgement(String message) throws Exception {
+        String serviceType;
+        String commisionID;
+        String agencyName;
+        String bindingKey;
+
+        String[] msg = message.split(", ");
+        serviceType = msg[0].split(" = ")[1];
+        commisionID = msg[1].split(" = ")[1];
+        agencyName = msg[2].split(" = ")[1];
+
+        String acknowledgement = "Company " + COMPANY_NAME + " received commision " + serviceType +
+                " (commissionID =  " + commisionID + ") from agency: " + agencyName;
+
+        bindingKey = "agency." + agencyName;
+
+        channel.basicPublish(EXCHANGE_NAME, bindingKey, null, acknowledgement.getBytes("UTF-8"));
+        System.out.println("\tAck sent: " + acknowledgement);
+    }
+
 
 }
 

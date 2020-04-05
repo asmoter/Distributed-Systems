@@ -1,15 +1,11 @@
 
 // zleca wykonanie trzech typów usług
 
-import com.rabbitmq.client.BuiltinExchangeType;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.concurrent.TimeoutException;
 
 
 public class Agency {
@@ -19,14 +15,41 @@ public class Agency {
     private static Channel channel;
     private static String EXCHANGE_NAME = "AgencyTransporterExchange";
 
-    private static void initialize_agency() throws IOException {
-        System.out.println("Enter Agency name: ");
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        AGENCY_NAME = br.readLine();
-        System.out.println("Agency \"" + AGENCY_NAME +  "\" connected");
+    public static void main(String[] argv) throws Exception {
+
+        initializeConnection();
+        initializeAgency();
+        initializeQueue();
+
+        Thread commissions = new Thread(new Runnable() {
+            public void run() {
+                try {
+                    makeCommission();
+                } catch (IOException e) {
+                    e.getMessage();
+                }
+            }
+        });
+        Thread.sleep(300);
+        Thread acknowledgement = new Thread(new Runnable() {
+            public void run() {
+                try {
+                    waitForAcknowledgement();
+                } catch (IOException e) {
+                    e.getMessage();
+                }
+            }
+        });
+        Thread.sleep(300);
+
+        commissions.start();
+        acknowledgement.start();
+        commissions.join();
+        acknowledgement.join();
+
     }
 
-    private static void initialize_connection() throws Exception {
+    private static void initializeConnection() throws Exception {
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
         Connection connection = factory.newConnection();
@@ -36,32 +59,57 @@ public class Agency {
         channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.TOPIC);
     }
 
-    private static void initialize_queues(){
-
+    private static void initializeAgency() throws IOException {
+        System.out.println("Enter Agency name: ");
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        AGENCY_NAME = br.readLine();
+        System.out.println("Agency \"" + AGENCY_NAME +  "\" connected");
     }
 
-    public static void main(String[] argv) throws Exception {
+    private static void initializeQueue() throws IOException {
+        channel.queueDeclare(AGENCY_NAME, true, false, false, null); //t, f, f, n
+        String bindingKey = "agency." + AGENCY_NAME;
+        channel.queueBind(AGENCY_NAME, EXCHANGE_NAME, bindingKey);
 
-        initialize_connection();
-        initialize_agency();
-        initialize_queues();
+        System.out.println("Initialized queue: \n" +
+                "1) " + AGENCY_NAME + " - key: " + bindingKey + "\n");
+    }
 
+    private static void makeCommission() throws IOException{
 
         while(true){
-
-//            System.out.println("Commision Key: // nr zlecenia");
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-            String commisionID = br.readLine();
             System.out.println("Which service would you like to order - PT, CT, LS: ");
             String service = br.readLine();
+            String bindingKey = "transporter." + service;
+            System.out.println("Commision ID: ");
+            String commisionID = br.readLine();
 
             if(service.equals("PT") || service.equals("CT") || service.equals("LS")){
-                channel.basicPublish(EXCHANGE_NAME, service, null, service.getBytes("UTF-8"));
-                System.out.println("Sent: " + service + "nr " + commisionID);
+                String msg = "Type = " + service + ", commisionID = " + commisionID + ", agency = " + AGENCY_NAME;
+                channel.basicPublish(EXCHANGE_NAME, bindingKey, null, msg.getBytes("UTF-8"));
+                System.out.println("\tSend commission: " + msg);
+                System.out.println("Waiting for ack...");
             }
             else{
                 System.out.println("Incorrect commision type. Try again...");
+                break;
             }
         }
+    }
+
+    private static void waitForAcknowledgement() throws IOException {
+        Consumer consumer = new DefaultConsumer(channel) {
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+                String message = new String(body, "UTF-8");
+                System.out.println("\tAck: " + message);
+                channel.basicAck(envelope.getDeliveryTag(), false);
+            }
+        };
+
+        // start listening
+//        System.out.println("Waiting for ack...");
+        channel.basicConsume(AGENCY_NAME, false, consumer);
     }
 }
