@@ -3,7 +3,6 @@ import com.rabbitmq.client.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 
 public class Transporter {
 
@@ -60,8 +59,7 @@ public class Transporter {
                 service_2 = new Service(br.readLine());
             }
             while(!service_2.isValid());
-            System.out.println("Service 1: " + service_1.getType() +
-                    "\nServive 2: " + service_2.getType() + "\n");
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -79,8 +77,6 @@ public class Transporter {
         channel.queueBind(QUEUE_NAME_2, EXCHANGE_NAME, bindingKey2);
 
         channel.basicQos(1);
-//        channel.queueDeclare("adminmode" + name, true, true, true, null).getQueue(); //queue for admin mode
-//        channel.queueBind("adminmode" + name, EXCHANGE_NAME, "carriers");
 
         System.out.println("Initialized queues: \n" +
                 "1) " + QUEUE_NAME_1 + " - key: " + bindingKey1 + "\n" +
@@ -98,9 +94,10 @@ public class Transporter {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                 String message = new String(body, "UTF-8");
-                System.out.println("Received: " + message);
+                System.out.println("Received commission: " + message);
                 channel.basicAck(envelope.getDeliveryTag(), false);
                 try {
+                    Thread.sleep(600);
                     processAcknowledgement(message);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -109,7 +106,7 @@ public class Transporter {
         };
 
         // start listening
-        System.out.println("Waiting for messages...");
+        System.out.println("Waiting for commissions...");
         channel.basicConsume(QUEUE_NAME_1, false, consumer); // true?
         channel.basicConsume(QUEUE_NAME_2, false, consumer); // true?
 
@@ -118,17 +115,17 @@ public class Transporter {
 
     private static void processAcknowledgement(String message) throws Exception {
         String serviceType;
-        String commisionID;
+        String commissionID;
         String agencyName;
         String bindingKey;
 
         String[] msg = message.split(", ");
         serviceType = msg[0].split(" = ")[1];
-        commisionID = msg[1].split(" = ")[1];
+        commissionID = msg[1].split(" = ")[1];
         agencyName = msg[2].split(" = ")[1];
 
-        String acknowledgement = "Company " + COMPANY_NAME + " received commision " + serviceType +
-                " (commissionID =  " + commisionID + ") from agency: " + agencyName;
+        String acknowledgement = "Company " + COMPANY_NAME + " received commission " + serviceType +
+                " (commissionID =  " + commissionID + ") from agency: " + agencyName;
 
         bindingKey = "agency." + agencyName;
 

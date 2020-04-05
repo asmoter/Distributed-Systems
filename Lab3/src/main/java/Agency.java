@@ -40,7 +40,6 @@ public class Agency {
                 }
             }
         });
-        Thread.sleep(300);
 
         commissions.start();
         acknowledgement.start();
@@ -78,21 +77,24 @@ public class Agency {
     private static void makeCommission() throws IOException{
 
         while(true){
+
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-            System.out.println("Which service would you like to order - PT, CT, LS: ");
+            System.out.println("-> Which service would you like to order - PT, CT, LS: ");
             String service = br.readLine();
-            String bindingKey = "transporter." + service;
-            System.out.println("Commision ID: ");
-            String commisionID = br.readLine();
 
             if(service.equals("PT") || service.equals("CT") || service.equals("LS")){
-                String msg = "Type = " + service + ", commisionID = " + commisionID + ", agency = " + AGENCY_NAME;
+
+                String bindingKey = "transporter." + service;
+                System.out.println("Commission ID: ");
+                String commissionID = br.readLine();
+
+                String msg = "Type = " + service + ", commissionID = " + commissionID + ", agency = " + AGENCY_NAME;
                 channel.basicPublish(EXCHANGE_NAME, bindingKey, null, msg.getBytes("UTF-8"));
                 System.out.println("\tSend commission: " + msg);
-                System.out.println("Waiting for ack...");
+                System.out.println("\tWaiting for ack...");
             }
-            else{
-                System.out.println("Incorrect commision type. Try again...");
+            else {
+                System.out.println("Incorrect commission type. Try again...");
                 break;
             }
         }
@@ -109,7 +111,6 @@ public class Agency {
         };
 
         // start listening
-//        System.out.println("Waiting for ack...");
         channel.basicConsume(AGENCY_NAME, false, consumer);
     }
 }
