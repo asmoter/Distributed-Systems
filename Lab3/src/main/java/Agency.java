@@ -1,8 +1,4 @@
-
-// zleca wykonanie trzech typów usług
-
 import com.rabbitmq.client.*;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -10,18 +6,19 @@ import java.io.InputStreamReader;
 
 public class Agency {
 
-
-    private static String  AGENCY_NAME;
     private static Channel channel;
+    private static String AGENCY_NAME;
     private static String EXCHANGE_NAME = "AgencyTransporterExchange";
+    private static String ADMIN_QUEUE = "adminMode_" + AGENCY_NAME;
+    private static String adminBindingKey = "agencies";
 
     public static void main(String[] argv) throws Exception {
 
         initializeConnection();
         initializeAgency();
-        initializeQueue();
+        initializeQueues();
 
-        Thread commissions = new Thread(new Runnable() {
+        Thread commissionsThread = new Thread(new Runnable() {
             public void run() {
                 try {
                     makeCommission();
@@ -31,7 +28,7 @@ public class Agency {
             }
         });
         Thread.sleep(300);
-        Thread acknowledgement = new Thread(new Runnable() {
+        Thread acknowledgementThread = new Thread(new Runnable() {
             public void run() {
                 try {
                     waitForAcknowledgement();
@@ -41,10 +38,10 @@ public class Agency {
             }
         });
 
-        commissions.start();
-        acknowledgement.start();
-        commissions.join();
-        acknowledgement.join();
+        commissionsThread.start();
+        acknowledgementThread.start();
+        commissionsThread.join();
+        acknowledgementThread.join();
 
     }
 
@@ -65,10 +62,14 @@ public class Agency {
         System.out.println("Agency \"" + AGENCY_NAME +  "\" connected");
     }
 
-    private static void initializeQueue() throws IOException {
-        channel.queueDeclare(AGENCY_NAME, true, false, false, null); //t, f, f, n
+    private static void initializeQueues() throws IOException {
+        channel.queueDeclare(AGENCY_NAME, true, false, false, null);
+
         String bindingKey = "agency." + AGENCY_NAME;
         channel.queueBind(AGENCY_NAME, EXCHANGE_NAME, bindingKey);
+
+        channel.queueDeclare(ADMIN_QUEUE, true, false, false, null);
+        channel.queueBind(ADMIN_QUEUE, EXCHANGE_NAME, adminBindingKey);
 
         System.out.println("Initialized queue: \n" +
                 "1) " + AGENCY_NAME + " - key: " + bindingKey + "\n");
@@ -90,6 +91,7 @@ public class Agency {
 
                 String msg = "Type = " + service + ", commissionID = " + commissionID + ", agency = " + AGENCY_NAME;
                 channel.basicPublish(EXCHANGE_NAME, bindingKey, null, msg.getBytes("UTF-8"));
+
                 System.out.println("\tSend commission: " + msg);
                 System.out.println("\tWaiting for ack...");
             }
@@ -105,12 +107,18 @@ public class Agency {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                 String message = new String(body, "UTF-8");
-                System.out.println("\tAck: " + message);
+                if(message.contains("Admin:")){
+                    System.out.println("\tMsg from " + message);
+                }
+                else{
+                    System.out.println("\tAck: " + message);
+                }
                 channel.basicAck(envelope.getDeliveryTag(), false);
             }
         };
 
         // start listening
         channel.basicConsume(AGENCY_NAME, false, consumer);
+        channel.basicConsume(ADMIN_QUEUE, false, consumer);
     }
 }

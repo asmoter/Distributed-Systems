@@ -6,13 +6,17 @@ import java.io.InputStreamReader;
 
 public class Transporter {
 
+    private static Channel channel;
     private static String COMPANY_NAME;
     private static String EXCHANGE_NAME = "AgencyTransporterExchange";
+    private static String ADMIN_EXCHANGE_NAME = "AdminExchange";
     private static String QUEUE_NAME_1;
     private static String QUEUE_NAME_2;
     private static Service service_1;
     private static Service service_2;
-    private static Channel channel;
+    private static String ADMIN_QUEUE = "adminMode_" + COMPANY_NAME;
+    private static String adminBindingKey = "transporters";
+
 
 
     public static void main(String[] argv) throws Exception {
@@ -78,6 +82,9 @@ public class Transporter {
 
         channel.basicQos(1);
 
+        channel.queueDeclare(ADMIN_QUEUE, true, false, false, null);
+        channel.queueBind(ADMIN_QUEUE, ADMIN_EXCHANGE_NAME, adminBindingKey);
+
         System.out.println("Initialized queues: \n" +
                 "1) " + QUEUE_NAME_1 + " - key: " + bindingKey1 + "\n" +
                 "2) " + QUEUE_NAME_2 + " - key: " + bindingKey2 + "\n");
@@ -94,14 +101,19 @@ public class Transporter {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                 String message = new String(body, "UTF-8");
-                System.out.println("Received commission: " + message);
-                channel.basicAck(envelope.getDeliveryTag(), false);
-                try {
-                    Thread.sleep(600);
-                    processAcknowledgement(message);
-                } catch (Exception e) {
-                    e.printStackTrace();
+                if(message.contains("Admin:")){
+                    System.out.println("Msg from " + message);
                 }
+                else{
+                    System.out.println("Received commission: " + message);
+                    try {
+                        Thread.sleep(600);
+                        processAcknowledgement(message);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                channel.basicAck(envelope.getDeliveryTag(), false);
             }
         };
 
@@ -109,6 +121,7 @@ public class Transporter {
         System.out.println("Waiting for commissions...");
         channel.basicConsume(QUEUE_NAME_1, false, consumer); // true?
         channel.basicConsume(QUEUE_NAME_2, false, consumer); // true?
+        channel.basicConsume(ADMIN_QUEUE, false, consumer);
 
     }
 
@@ -130,6 +143,7 @@ public class Transporter {
         bindingKey = "agency." + agencyName;
 
         channel.basicPublish(EXCHANGE_NAME, bindingKey, null, acknowledgement.getBytes("UTF-8"));
+
         System.out.println("\tAck sent: " + acknowledgement);
     }
 
