@@ -3,14 +3,13 @@ import com.rabbitmq.client.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 
 public class Administrator {
 
+    private static Channel channel;
     private static String EXCHANGE_NAME = "AgencyTransporterExchange";
     private static String ADMIN_EXCHANGE_NAME = "AdminExchange";
     private static String ADMIN_NAME = "admin";
-    private static Channel channel;
 
 
     public static void main(String[] args) throws Exception {
@@ -28,7 +27,7 @@ public class Administrator {
                 }
             }
         });
-        Thread.sleep(500);
+
         Thread messagingThread = new Thread(new Runnable() {
             public void run() {
                 try {
@@ -57,10 +56,9 @@ public class Administrator {
 
     private static void initializeQueue() throws IOException {
 
-        channel.queueDeclare(ADMIN_NAME, true, false, false, null);
         String bindingKey = "#";
+        channel.queueDeclare(ADMIN_NAME, true, false, false, null);
         channel.queueBind(ADMIN_NAME, EXCHANGE_NAME, bindingKey);
-//        channel.queueBind(ADMIN_NAME, ADMIN_EXCHANGE_NAME, bindingKey);
 
         System.out.println("Initialized admin queue - key: " + bindingKey + "\n");
     }
@@ -71,8 +69,8 @@ public class Administrator {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                 String message = new String(body, "UTF-8");
-                System.out.println("-> " + message);
                 channel.basicAck(envelope.getDeliveryTag(), false);
+                System.out.println("-> " + message);
             }
         };
         channel.basicConsume(ADMIN_NAME, false, consumer);
@@ -80,12 +78,13 @@ public class Administrator {
 
     private static void sendMsg() throws IOException {
 
-        while (true) {
-            System.out.println("Choose one of the following modes: \n" +
-                    "1) A - send msg to all agencies\n" +
-                    "2) T - send msg to all transporters\n" +
-                    "3) AT - send msg to all agencies and transporters");
+        System.out.println("Available message modes: \n" +
+                "1) A - send msg to all agencies\n" +
+                "2) T - send msg to all transporters\n" +
+                "3) AT - send msg to all agencies and transporters");
 
+        while (true) {
+            System.out.println("Choose message mode:");
             String mode;
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             do {
@@ -100,7 +99,6 @@ public class Administrator {
     }
 
     private static boolean isModeValid(String mode){
-
         if(mode.equals("A") || mode.equals("T") || mode.equals("AT")){
             return true;
         }
@@ -108,13 +106,10 @@ public class Administrator {
             System.out.println("Incorrect mode. Choose one of the following: A, T, AT");
             return false;
         }
-
     }
 
     private static void processMsg(String mode, String message) throws IOException {
-
         String msg = "Admin: " + message;
-
         if(mode.equals("A")){
             msgAllAgencies(msg);
         }

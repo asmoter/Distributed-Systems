@@ -9,8 +9,9 @@ public class Agency {
     private static Channel channel;
     private static String AGENCY_NAME;
     private static String EXCHANGE_NAME = "AgencyTransporterExchange";
-    private static String ADMIN_QUEUE = "adminMode_" + AGENCY_NAME;
-    private static String adminBindingKey = "agencies";
+    private static String ADMIN_EXCHANGE_NAME = "AdminExchange";
+    private static String ADMIN_QUEUE;
+
 
     public static void main(String[] argv) throws Exception {
 
@@ -27,7 +28,7 @@ public class Agency {
                 }
             }
         });
-        Thread.sleep(300);
+
         Thread acknowledgementThread = new Thread(new Runnable() {
             public void run() {
                 try {
@@ -42,7 +43,6 @@ public class Agency {
         acknowledgementThread.start();
         commissionsThread.join();
         acknowledgementThread.join();
-
     }
 
     private static void initializeConnection() throws Exception {
@@ -51,8 +51,8 @@ public class Agency {
         Connection connection = factory.newConnection();
         channel = connection.createChannel();
 
-//        Exchange
         channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.TOPIC);
+        channel.exchangeDeclare(ADMIN_EXCHANGE_NAME, BuiltinExchangeType.TOPIC);
     }
 
     private static void initializeAgency() throws IOException {
@@ -63,13 +63,16 @@ public class Agency {
     }
 
     private static void initializeQueues() throws IOException {
-        channel.queueDeclare(AGENCY_NAME, true, false, false, null);
 
         String bindingKey = "agency." + AGENCY_NAME;
+        String adminBindingKey = "agencies";
+        ADMIN_QUEUE = "adminMode_" + AGENCY_NAME;
+
+        channel.queueDeclare(AGENCY_NAME, true, false, false, null);
         channel.queueBind(AGENCY_NAME, EXCHANGE_NAME, bindingKey);
 
         channel.queueDeclare(ADMIN_QUEUE, true, false, false, null);
-        channel.queueBind(ADMIN_QUEUE, EXCHANGE_NAME, adminBindingKey);
+        channel.queueBind(ADMIN_QUEUE, ADMIN_EXCHANGE_NAME, adminBindingKey);
 
         System.out.println("Initialized queue: \n" +
                 "1) " + AGENCY_NAME + " - key: " + bindingKey + "\n");
@@ -86,6 +89,7 @@ public class Agency {
             if(service.equals("PT") || service.equals("CT") || service.equals("LS")){
 
                 String bindingKey = "transporter." + service;
+
                 System.out.println("Commission ID: ");
                 String commissionID = br.readLine();
 
@@ -93,7 +97,6 @@ public class Agency {
                 channel.basicPublish(EXCHANGE_NAME, bindingKey, null, msg.getBytes("UTF-8"));
 
                 System.out.println("\tSend commission: " + msg);
-                System.out.println("\tWaiting for ack...");
             }
             else {
                 System.out.println("Incorrect commission type. Try again...");
@@ -108,7 +111,7 @@ public class Agency {
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                 String message = new String(body, "UTF-8");
                 if(message.contains("Admin:")){
-                    System.out.println("\tMsg from " + message);
+                    System.out.println(" ~ Msg from " + message);
                 }
                 else{
                     System.out.println("\tAck: " + message);

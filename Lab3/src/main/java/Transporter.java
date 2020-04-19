@@ -14,10 +14,7 @@ public class Transporter {
     private static String QUEUE_NAME_2;
     private static Service service_1;
     private static Service service_2;
-    private static String ADMIN_QUEUE = "adminMode_" + COMPANY_NAME;
-    private static String adminBindingKey = "transporters";
-
-
+    private static String ADMIN_QUEUE;
 
     public static void main(String[] argv) throws Exception {
 
@@ -26,7 +23,7 @@ public class Transporter {
         initializeServices();
         initializeQueues();
 
-        processComissions();
+        waitForComissions();
     }
 
     private static void initializeConnection() throws Exception {
@@ -36,10 +33,10 @@ public class Transporter {
         channel = connection.createChannel();
 
         channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.TOPIC);
+        channel.exchangeDeclare(ADMIN_EXCHANGE_NAME, BuiltinExchangeType.TOPIC);
     }
 
     private static void initializeTransporter() throws IOException {
-
         System.out.println("Enter company name: ");
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         COMPANY_NAME = br.readLine();
@@ -71,13 +68,15 @@ public class Transporter {
 
     private static void initializeQueues() throws IOException {
         get_queue_names();
+        String bindingKey1 = "transporter." + service_1.getType();
+        String bindingKey2 = "transporter." + service_2.getType();
+        String adminBindingKey = "transporters";
+        ADMIN_QUEUE = "adminMode_" + COMPANY_NAME;
 
         channel.queueDeclare(QUEUE_NAME_1, true, false, false, null);
-        String bindingKey1 = "transporter." + service_1.getType();
         channel.queueBind(QUEUE_NAME_1, EXCHANGE_NAME, bindingKey1);
 
         channel.queueDeclare(QUEUE_NAME_2, true, false, false, null);
-        String bindingKey2 = "transporter." + service_2.getType();
         channel.queueBind(QUEUE_NAME_2, EXCHANGE_NAME, bindingKey2);
 
         channel.basicQos(1);
@@ -95,23 +94,17 @@ public class Transporter {
         QUEUE_NAME_2 = service_2.getType() + "_queue";
     }
 
-    private static void processComissions() throws IOException {
+    private static void waitForComissions() throws IOException {
 
         Consumer consumer = new DefaultConsumer(channel) {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                 String message = new String(body, "UTF-8");
                 if(message.contains("Admin:")){
-                    System.out.println("Msg from " + message);
+                    System.out.println(" ~ Msg from " + message);
                 }
                 else{
-                    System.out.println("Received commission: " + message);
-                    try {
-                        Thread.sleep(600);
-                        processAcknowledgement(message);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    processCommission(message);
                 }
                 channel.basicAck(envelope.getDeliveryTag(), false);
             }
@@ -119,12 +112,20 @@ public class Transporter {
 
         // start listening
         System.out.println("Waiting for commissions...");
-        channel.basicConsume(QUEUE_NAME_1, false, consumer); // true?
-        channel.basicConsume(QUEUE_NAME_2, false, consumer); // true?
+        channel.basicConsume(QUEUE_NAME_1, false, consumer);
+        channel.basicConsume(QUEUE_NAME_2, false, consumer);
         channel.basicConsume(ADMIN_QUEUE, false, consumer);
-
     }
 
+    private static void processCommission(String message){
+        System.out.println("Received commission: " + message);
+        try {
+            Thread.sleep(600);
+            processAcknowledgement(message);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     private static void processAcknowledgement(String message) throws Exception {
         String serviceType;
@@ -146,7 +147,5 @@ public class Transporter {
 
         System.out.println("\tAck sent: " + acknowledgement);
     }
-
-
 }
 
