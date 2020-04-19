@@ -8,7 +8,7 @@ public class Transporter {
 
     private static Channel channel;
     private static String COMPANY_NAME;
-    private static String EXCHANGE_NAME = "AgencyTransporterExchange";
+    private static String EXCHANGE_NAME = "CommissionExchange";
     private static String ADMIN_EXCHANGE_NAME = "AdminExchange";
     private static String QUEUE_NAME_1;
     private static String QUEUE_NAME_2;
@@ -33,7 +33,7 @@ public class Transporter {
         channel = connection.createChannel();
 
         channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.TOPIC);
-        channel.exchangeDeclare(ADMIN_EXCHANGE_NAME, BuiltinExchangeType.TOPIC);
+        channel.exchangeDeclare(ADMIN_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
     }
 
     private static void initializeTransporter() throws IOException {
@@ -70,23 +70,19 @@ public class Transporter {
         get_queue_names();
         String bindingKey1 = "transporter." + service_1.getType();
         String bindingKey2 = "transporter." + service_2.getType();
-        String adminBindingKey = "transporters";
-        ADMIN_QUEUE = "adminMode_" + COMPANY_NAME;
+        String adminBindingKey = "allTransporters";
+        ADMIN_QUEUE = "admin_" + COMPANY_NAME;
 
-        channel.queueDeclare(QUEUE_NAME_1, true, false, false, null);
+        channel.queueDeclare(QUEUE_NAME_1, true, false, true, null);
         channel.queueBind(QUEUE_NAME_1, EXCHANGE_NAME, bindingKey1);
 
-        channel.queueDeclare(QUEUE_NAME_2, true, false, false, null);
+        channel.queueDeclare(QUEUE_NAME_2, true, false, true, null);
         channel.queueBind(QUEUE_NAME_2, EXCHANGE_NAME, bindingKey2);
 
         channel.basicQos(1);
 
-        channel.queueDeclare(ADMIN_QUEUE, true, false, false, null);
+        channel.queueDeclare(ADMIN_QUEUE, true, true, true, null);
         channel.queueBind(ADMIN_QUEUE, ADMIN_EXCHANGE_NAME, adminBindingKey);
-
-        System.out.println("Initialized queues: \n" +
-                "1) " + QUEUE_NAME_1 + " - key: " + bindingKey1 + "\n" +
-                "2) " + QUEUE_NAME_2 + " - key: " + bindingKey2 + "\n");
     }
 
     private static void get_queue_names() {

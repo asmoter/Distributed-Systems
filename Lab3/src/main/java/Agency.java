@@ -8,7 +8,7 @@ public class Agency {
 
     private static Channel channel;
     private static String AGENCY_NAME;
-    private static String EXCHANGE_NAME = "AgencyTransporterExchange";
+    private static String EXCHANGE_NAME = "CommissionExchange";
     private static String ADMIN_EXCHANGE_NAME = "AdminExchange";
     private static String ADMIN_QUEUE;
 
@@ -52,7 +52,7 @@ public class Agency {
         channel = connection.createChannel();
 
         channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.TOPIC);
-        channel.exchangeDeclare(ADMIN_EXCHANGE_NAME, BuiltinExchangeType.TOPIC);
+        channel.exchangeDeclare(ADMIN_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
     }
 
     private static void initializeAgency() throws IOException {
@@ -65,17 +65,15 @@ public class Agency {
     private static void initializeQueues() throws IOException {
 
         String bindingKey = "agency." + AGENCY_NAME;
-        String adminBindingKey = "agencies";
-        ADMIN_QUEUE = "adminMode_" + AGENCY_NAME;
+        String adminBindingKey = "allAgencies";
+        ADMIN_QUEUE = "admin_" + AGENCY_NAME;
 
-        channel.queueDeclare(AGENCY_NAME, true, false, false, null);
+        // name, durability, exclusiveness, auto-deletion, arguments
+        channel.queueDeclare(AGENCY_NAME, true, false, true, null);
         channel.queueBind(AGENCY_NAME, EXCHANGE_NAME, bindingKey);
 
-        channel.queueDeclare(ADMIN_QUEUE, true, false, false, null);
+        channel.queueDeclare(ADMIN_QUEUE, true, true, true, null);
         channel.queueBind(ADMIN_QUEUE, ADMIN_EXCHANGE_NAME, adminBindingKey);
-
-        System.out.println("Initialized queue: \n" +
-                "1) " + AGENCY_NAME + " - key: " + bindingKey + "\n");
     }
 
     private static void makeCommission() throws IOException{
@@ -100,7 +98,6 @@ public class Agency {
             }
             else {
                 System.out.println("Incorrect commission type. Try again...");
-                break;
             }
         }
     }

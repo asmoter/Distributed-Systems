@@ -7,7 +7,7 @@ import java.io.InputStreamReader;
 public class Administrator {
 
     private static Channel channel;
-    private static String EXCHANGE_NAME = "AgencyTransporterExchange";
+    private static String EXCHANGE_NAME = "CommissionExchange";
     private static String ADMIN_EXCHANGE_NAME = "AdminExchange";
     private static String ADMIN_NAME = "admin";
 
@@ -51,13 +51,13 @@ public class Administrator {
         channel = connection.createChannel();
 
         channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.TOPIC);
-        channel.exchangeDeclare(ADMIN_EXCHANGE_NAME, BuiltinExchangeType.TOPIC);
+        channel.exchangeDeclare(ADMIN_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
     }
 
     private static void initializeQueue() throws IOException {
 
         String bindingKey = "#";
-        channel.queueDeclare(ADMIN_NAME, true, false, false, null);
+        channel.queueDeclare(ADMIN_NAME, true, true, true, null);
         channel.queueBind(ADMIN_NAME, EXCHANGE_NAME, bindingKey);
 
         System.out.println("Initialized admin queue - key: " + bindingKey + "\n");
@@ -122,12 +122,12 @@ public class Administrator {
     }
 
     private static void msgAllAgencies(String msg) throws IOException {
-        String agenciesBindingKey = "agencies";
+        String agenciesBindingKey = "allAgencies";
         channel.basicPublish(ADMIN_EXCHANGE_NAME, agenciesBindingKey, null, msg.getBytes("UTF-8"));
     }
 
     private static void msgAllTransporters(String msg) throws IOException {
-        String transportersBindingKey = "transporters";
+        String transportersBindingKey = "allTransporters";
         channel.basicPublish(ADMIN_EXCHANGE_NAME, transportersBindingKey, null, msg.getBytes("UTF-8"));
     }
 

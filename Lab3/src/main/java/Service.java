@@ -4,7 +4,7 @@ public class Service {
     private boolean cargo_transport;
     private boolean launch_satellite;
 
-    public Service(String type) throws Exception {
+    public Service(String type) {
         this.passaneger_transport = false;
         this.cargo_transport = false;
         this.launch_satellite = false;
@@ -22,32 +22,8 @@ public class Service {
         }
     }
 
-    public boolean isValid(){ // trzeba zmienic nazwe chyba
+    public boolean isValid(){
         return passaneger_transport || cargo_transport || launch_satellite;
-    }
-
-    public boolean isPassaneger_transport() {
-        return passaneger_transport;
-    }
-
-    public boolean isCargo_transport() {
-        return cargo_transport;
-    }
-
-    public boolean isLaunch_satellite() {
-        return launch_satellite;
-    }
-
-    public String getName(){
-        if(passaneger_transport){
-            return "Passenger transport";
-        }
-        else if(cargo_transport){
-            return "Cargo transport";
-        }
-        else{
-            return "Launch satellite";
-        }
     }
 
     public String getType(){
@@ -61,5 +37,4 @@ public class Service {
             return "LS";
         }
     }
-
 }
