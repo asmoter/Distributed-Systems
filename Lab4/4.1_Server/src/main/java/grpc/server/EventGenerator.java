@@ -8,11 +8,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class EventGenerator {
 
     int timeToWait = 5000;
     private List<Event> events = new ArrayList<Event>();
+    private ReentrantLock lock = new ReentrantLock();
+
+    public ReentrantLock getLock() {
+        return lock;
+    }
+
+    public EventGenerator(ReentrantLock lock) {
+        this.lock = lock;
+    }
 
     private static String[] cities = new String[]{"Cracow", "Warsaw", "London", "Venice", "Paris", "New York"};
 
@@ -38,7 +48,9 @@ public class EventGenerator {
                 Event event = generateEvent();
                 System.out.println("New event! " + event.getEventType() + ": " +
                         event.getName() + " in " + event.getCity());
+                lock.lock();
                 events.add(event);
+                lock.unlock();
                 Thread.sleep(timeToWait);
             } catch (InterruptedException e) {
                 e.printStackTrace();

@@ -5,8 +5,7 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 import static java.lang.Thread.sleep;
@@ -20,7 +19,8 @@ public class EventServer {
 
     private void start() throws IOException
     {
-        EventGenerator generator = new EventGenerator();
+        ReentrantLock lock = new ReentrantLock();
+        EventGenerator generator = new EventGenerator(lock);
         server = ServerBuilder.forPort(port)
                 .addService(new EventService(generator))
                 .build()

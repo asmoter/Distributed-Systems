@@ -54,7 +54,7 @@ def subscribe_on_event():
     try:
         stream = stub.subscribeOnEvent(subscription_request)
         for event in stream:
-            print("\n" + event)
+            print(event)
     except grpc._channel._Rendezvous:
         server_connected = False
         print("Failed to reach the server. Trying to reconnect...")
