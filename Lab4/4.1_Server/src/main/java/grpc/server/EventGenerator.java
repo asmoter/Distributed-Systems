@@ -11,24 +11,40 @@ import java.util.Map;
 
 public class EventGenerator {
 
-    private Map<EventType, Event> map = new HashMap<EventType, Event>();
+    int timeToWait = 5000;
+    private List<Event> events = new ArrayList<Event>();
 
-    private static String[] cities = new String[]{"Cracow", "Warsaw", "London", "Venice", "Paris"};
+    private static String[] cities = new String[]{"Cracow", "Warsaw", "London", "Venice", "Paris", "New York"};
 
-    private static String[] names = new String[]{"Juwemnalia", "Noc Muzeow", "Parada Smokow", "Festiwal Smakow", "Pokaz mody"};
+    private static String[] names = new String[]{"Juwenalia", "Noc Muzeow", "Parada Smokow", "Festiwal Smakow", "Pokaz mody", "Noc Naukowcow"};
 
-    private static int[] fees = new int[]{0, 10, 30, 50, 100};
+    private static int[] fees = new int[]{0, 10, 15,  30, 50, 100};
 
-    private static int[] duration = new int[]{1, 2, 3, 5, 7};
+    private static int[] duration = new int[]{1, 2, 3, 5, 7, 10};
 
-    private static String[] types = new String[]{"CONCERT, FESTIVAL, EXHIBITION, PARADE"};
+    private static String[] firstNames = new String[]{"Kate", "Michael", "Rose", "Phillip", "Thomas", "Elisa"};
 
-    private static String[] firstNames = new String[]{"Kate", "Michael", "Rose", "Phillip", "Thomas"};
-
-    private static String[] lastNames = new String[]{"Kowalsky", "Smith", "Carols", "Bell", "Novak"};
+    private static String[] lastNames = new String[]{"Kowalsky", "Smith", "Carols", "Bell", "Novak", "Rascal"};
 
     private static String[] phoneNumbers = new String[]{"669 134 782", "992 781 916", "600 789 221", "535 500 823", "325 678 910"};
 
+    public List<Event> getEvents(){
+        return events;
+    }
+
+    public void generateEvents(){
+        while(!Thread.currentThread().isInterrupted()){
+            try {
+                Event event = generateEvent();
+                System.out.println("New event! " + event.getEventType() + ": " +
+                        event.getName() + " in " + event.getCity());
+                events.add(event);
+                Thread.sleep(timeToWait);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     Event generateEvent(){
         return Event.newBuilder()
@@ -83,14 +99,14 @@ public class EventGenerator {
         return firstNames[i];
     }
 
-    private static String generateLasttName(){
+    private static String generateLastName(){
         int min = 0, max = 5;
         int i = generateRandom(min, max);
         return lastNames[i];
     }
 
     private static String generatePhoneNumber(){
-        int min = 0, max = 5;
+        int min = 0, max = 4;
         int i = generateRandom(min, max);
         return phoneNumbers[i];
     }
@@ -101,7 +117,7 @@ public class EventGenerator {
         for(int i = 0; i < n; i++){
             organizers.add(Person.newBuilder()
                     .setFirstName(generateFirstName())
-                    .setLastName(generateLasttName())
+                    .setLastName(generateLastName())
                     .setPhoneNumber(generatePhoneNumber())
                     .build());
         }

@@ -1,9 +1,12 @@
 package grpc.server;
 
+import gen.Event;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import static java.lang.Thread.sleep;
@@ -14,13 +17,12 @@ public class EventServer {
 
     private int port = 50051;
     private Server server;
-    private static EventGenerator generator = new EventGenerator();
-    private static EventService eventService = new EventService();
 
     private void start() throws IOException
     {
+        EventGenerator generator = new EventGenerator();
         server = ServerBuilder.forPort(port)
-                .addService(eventService)
+                .addService(new EventService(generator))
                 .build()
                 .start();
         logger.info("Server started, listening on " + port);
@@ -33,6 +35,7 @@ public class EventServer {
                 System.err.println("~~ server shut down ~~");
             }
         });
+        generator.generateEvents();
     }
 
     private void stop() {
@@ -49,24 +52,12 @@ public class EventServer {
 
     public static void main(String[] args) {
 
-        Thread generatingEventsThread = new Thread(new Runnable() {
-            public void run() {
-
-
-//                Event event = generator.generateEvent();
-//                            System.out.println("New event! " + event.getEventType() + ": " +
-//                                    event.getName() + " in " + event.getCity());
-//                            events.add(event);
-//                            Thread.sleep(timeToWait);
-//                        } catch (InterruptedException e) {
-//                            e.printStackTrace();
-//                        }
-//                    }
-//                }
-                generator.generateEvent();
-            }
-        });
-        generatingEventsThread.start();
+//        Thread generatingEventsThread = new Thread(new Runnable() {
+//            public void run() {
+//                generator.generateEvent();
+//            }
+//        });
+//        generatingEventsThread.start();
         try{
             final EventServer server = new EventServer();
             server.start();
