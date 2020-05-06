@@ -108,17 +108,51 @@ class CoffeeMakerI(SmartHouse.CoffeeMaker, SmartDeviceI):
         self.sugar = 50
         self.water = 400
         self.coffee = 400
+        self.milk = 400
 
     def makeCoffee(self, coffee_type, current=None):
         check_if_off(self.power_mode)
-        if self.water - 150 < 0:
-            error_time = generate_time()
-            raise SmartHouse.LackOfIngredientExc(error_time, "Not enough water in machine")
-        if self.coffee - 20 < 0:
-            error_time = generate_time()
-            raise SmartHouse.LackOfIngredientExc(error_time, "Not enough coffee in machine")
-        self.water -= 150
-        self.coffee -= 20
+        if coffee_type == SmartHouse.CoffeeType.ESPRESSO:
+            if self.coffee - 25 < 0:
+                error_time = generate_time()
+                raise SmartHouse.LackOfIngredientExc(error_time, "Not enough coffee in machine")
+            self.coffee -= 25
+        if coffee_type == SmartHouse.CoffeeType.AMERICANO:
+            if self.coffee - 25 < 0:
+                error_time = generate_time()
+                raise SmartHouse.LackOfIngredientExc(error_time, "Not enough coffee in machine")
+            if self.water - 60 < 0:
+                error_time = generate_time()
+                raise SmartHouse.LackOfIngredientExc(error_time, "Not enough water in machine")
+            self.coffee -= 25
+            self.water -= 60
+        if coffee_type == SmartHouse.CoffeeType.FLATWHITE:
+            if self.coffee - 60 < 0:
+                error_time = generate_time()
+                raise SmartHouse.LackOfIngredientExc(error_time, "Not enough coffee in machine")
+            if self.milk - 120 < 0:
+                error_time = generate_time()
+                raise SmartHouse.LackOfIngredientExc(error_time, "Not enough milk in machine")
+            self.coffee -= 60
+            self.milk -= 120
+        if coffee_type == SmartHouse.CoffeeType.CAPPUCCINO:
+            if self.coffee - 25 < 0:
+                error_time = generate_time()
+                raise SmartHouse.LackOfIngredientExc(error_time, "Not enough coffee in machine")
+            if self.milk - 100 < 0:
+                error_time = generate_time()
+                raise SmartHouse.LackOfIngredientExc(error_time, "Not enough milk in machine")
+            self.coffee -= 25
+            self.milk -= 100
+        if coffee_type == SmartHouse.CoffeeType.LATTE:
+            if self.coffee - 50 < 0:
+                error_time = generate_time()
+                raise SmartHouse.LackOfIngredientExc(error_time, "Not enough coffee in machine")
+            if self.milk - 150 < 0:
+                error_time = generate_time()
+                raise SmartHouse.LackOfIngredientExc(error_time, "Not enough milk in machine")
+            self.coffee -= 50
+            self.milk -= 150
 
     def addSugar(self, spoons, current=None):
         check_if_off(self.power_mode)
