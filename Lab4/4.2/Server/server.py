@@ -5,8 +5,6 @@ import traceback
 import Ice
 import datetime
 
-# sys.path.insert(1, './gen')
-
 Ice.loadSlice("../Slice/smartHouse.ice")
 import SmartHouse
 
