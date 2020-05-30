@@ -4,25 +4,48 @@ import akka.event.LoggingAdapter;
 import akka.japi.pf.DeciderBuilder;
 import scala.concurrent.duration.Duration;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class Server extends AbstractActor {
 
     private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
 
-    ActorRef stores = getContext().actorOf(Props.create(Store.class), "stores");
+    int requestID = 0;
+    Map<Integer, ActorRef> clients = new HashMap<>();
+
 
     @Override
     public Receive createReceive() {
+        List<PriceResponse> priceResponses = new ArrayList<>();
         return receiveBuilder()
-                .match(String.class, product -> {
-                    log.info("Received request: What is the price of: " + product);
+                .match(PriceRequest.class, request -> {
+                    log.info("Received request. What is the price of: " + request.getProduct());
+                    ActorRef client = getSender();
+                    clients.put(requestID, client);
                     ActorRef store1 = context().actorOf(Props.create(Store.class));
                     ActorRef store2 = context().actorOf(Props.create(Store.class));
-                    PriceRequest request = new PriceRequest(product);
                     store1.tell(request, getSelf());
                     store2.tell(request, getSelf());
                 })
                 .match(PriceResponse.class, response -> {
                     log.info("Received response for " + response.getProduct() + ": " + response.getPrice());
+                    priceResponses.add(response);
+                    if(priceResponses.size() == 2){
+
+                        PriceResponse response1 = priceResponses.get(0);
+                        PriceResponse response2 = priceResponses.get(1);
+                        if(response1.getPrice() < response2.getPrice()){
+                            System.out.println("Price = " + response1.getPrice());
+                            clients.get(requestID).tell(response1, getSelf());
+                        }
+                        else{
+                            System.out.println("Price = " + response2.getPrice());
+                            clients.get(requestID).tell(response2, getSelf());
+                        }
+                    }
                 })
                 .matchAny(o -> log.info("Server: received unknown message: " + o))
                 .build();

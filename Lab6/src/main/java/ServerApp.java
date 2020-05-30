@@ -21,14 +21,14 @@ public class ServerApp {
 
         System.out.println("Server started...");
 
-        // interaction
-//        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-//        while (true) {
-//            String line = br.readLine();
-//            if (line.equals("q")) {
-//                break;
-//            }
-//        }
-//        system.terminate();
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        while (true) {
+            String line = br.readLine();
+            if (line.equals("q")) {
+                break;
+            }
+        }
+
+        system.terminate();
     }
 }

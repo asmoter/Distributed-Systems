@@ -29,7 +29,8 @@ public class ClientApp {
             if (line.equals("q")) {
                 break;
             }
-            client.tell(line, null);
+            PriceRequest request = new PriceRequest(line);
+            client.tell(request, null);
         }
 
         system.terminate();

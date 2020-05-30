@@ -12,10 +12,9 @@ public class Client extends AbstractActor {
     @Override
     public AbstractActor.Receive createReceive() {
         return receiveBuilder()
-                .match(String.class, productName -> {
-//                    PriceRequest request = new PriceRequest(productName);
-                    getContext().actorSelection(SERVER_PATH).tell((productName), getSelf());
-                    log.info("Sending price request for: " + productName);
+                .match(PriceRequest.class, request -> {
+                    getContext().actorSelection(SERVER_PATH).tell(request, getSelf());
+                    log.info("Sending price request for: " + request.getProduct());
                 })
                 .match(PriceResponse.class, response -> {
                     log.info("Client received response: " + response);
