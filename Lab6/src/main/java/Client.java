@@ -6,9 +6,8 @@ public class Client extends AbstractActor {
 
     // for logging
     private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
-    private static final String SERVER_PATH = "akka://server_system@127.0.0.1:2552/user/server";
+    private static final String SERVER_PATH = "akka://server_system@127.0.0.1:2551/user/server";
 
-    // must be implemented -> creates initial behaviour
     @Override
     public AbstractActor.Receive createReceive() {
         return receiveBuilder()

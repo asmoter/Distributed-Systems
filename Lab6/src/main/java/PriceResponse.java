@@ -2,12 +2,14 @@ import java.io.Serializable;
 
 public class PriceResponse implements Serializable {
 
-    private int id;
+    private int requestID;
+    private String clientID;
     private final int price;
     private String product;
 
-    public PriceResponse(String product, int price) {
-        this.id = 2;
+    public PriceResponse(String clientID, int requestID, String product, int price) {
+        this.clientID = clientID;
+        this.requestID = requestID;
         this.product = product;
         this.price = price;
     }
@@ -17,25 +19,29 @@ public class PriceResponse implements Serializable {
         return "PriceResponse{ price = " + price + ", product = " + product + "}";
     }
 
-    public int getPrice() {
-        return price;
+    public String getClientID(){
+        return clientID;
+    }
+
+    public int getRequestID(){
+        return requestID;
     }
 
     public String getProduct() {
         return product;
     }
 
-    public void setProduct(String product) {
-        this.product = product;
+    public int getPrice() {
+        return price;
     }
 
     public byte[] toByteArray(){
-        return (product + ";" + price).getBytes();
+        return (clientID + ";" + requestID + ";" + product + ";" + price).getBytes();
     }
 
     public static PriceResponse parseFrom(byte[] arr) throws Exception{
         String content = new String(arr);
         String[] response = content.split(";");
-        return new PriceResponse(response[0], Integer.parseInt(response[1]));
+        return new PriceResponse(response[0], Integer.parseInt(response[1]), response[2], Integer.parseInt(response[3]));
     }
 }

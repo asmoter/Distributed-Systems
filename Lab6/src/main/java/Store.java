@@ -16,7 +16,7 @@ public class Store extends AbstractActor {
                     Thread.sleep(timeToSleep);
                     log.info("Time to sleep: " + timeToSleep + " [ms]");
                     int value = new Random().nextInt(10) + 1;
-                    PriceResponse response = new PriceResponse(request.getProduct(), value);
+                    PriceResponse response = new PriceResponse(request.getClientID(), request.getRequestID(), request.getProduct(), value);
                     getSender().tell(response, getSelf());
                 })
                 .matchAny(o -> log.info("Store: received unknown message: " + o))

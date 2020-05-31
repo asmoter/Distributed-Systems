@@ -2,6 +2,7 @@ import akka.actor.*;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.pf.DeciderBuilder;
+import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
 import java.util.ArrayList;
@@ -13,16 +14,19 @@ public class Server extends AbstractActor {
     private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
 
     private int requestID = 0;
-    Map<Integer, ActorRef> clients = new HashMap<>();
-    List<PriceResponse> priceResponses = new ArrayList<>();
+    Map<String, ActorRef> clients = new HashMap<>();
+    Map<Integer, PriceRequest> Requests = new HashMap<>();
+    Map<Integer, List<PriceResponse>> Responses = new HashMap<>();
 
     @Override
     public Receive createReceive() {
         return receiveBuilder()
                 .match(PriceRequest.class, request -> {
-                    log.info("Received request. What is the price of: " + request.getProduct());
+                    log.info("Received request from client" + request.getClientID() + ". What is the price of: " + request.getProduct());
                     ActorRef client = getSender();
-                    clients.put(requestID, client);
+                    request.setRequestID(requestID);
+                    clients.put(request.getClientID(), client);
+//                    Requests.put(requestID, request);
 
                     context().child("store1").get().tell(request, getSelf());
                     context().child("store2").get().tell(request, getSelf());
@@ -31,18 +35,41 @@ public class Server extends AbstractActor {
                             .scheduleOnce(java.time.Duration.ofMillis(300), () ->
                                 client.tell(returnPrice(request), getSelf()),
                                 context().system().dispatcher());
+
                     requestID++;
                 })
                 .match(PriceResponse.class, response -> {
-                    log.info("Received response for " + response.getProduct() + ": " + response.getPrice());
-                    priceResponses.add(response);
+                    log.info("Received response for client" + response.getClientID() + " -> "+ response.getProduct() + ": " + response.getPrice());
+                    addResponse(response);
                 })
                 .matchAny(o -> log.info("Server: received unknown message: " + o))
                 .build();
     }
 
+    private void addResponse(PriceResponse response){
+        List<PriceResponse> responses;
+        if(Responses.containsKey(response.getRequestID())){
+            responses = Responses.get(response.getRequestID());
+        } else {
+            responses = new ArrayList<PriceResponse>();
+        }
+        responses.add(response);
+        Responses.put(response.getRequestID(), responses);
+    }
+
     private PriceResponse returnPrice(PriceRequest request){
-        if(priceResponses.size() == 2){
+
+        List<PriceResponse> priceResponses = Responses.get(request.getRequestID());
+
+        if(priceResponses.size() == 0){
+            return new PriceResponse(request.getClientID(), request.getRequestID(), request.getProduct(), -1);
+        }
+        else if(priceResponses.size() == 1){
+            PriceResponse response = priceResponses.get(0);
+            System.out.println("Price = " + response.getPrice());
+            return response;
+        }
+        else{
             PriceResponse response;
             PriceResponse response1 = priceResponses.get(0);
             PriceResponse response2 = priceResponses.get(1);
@@ -54,18 +81,7 @@ public class Server extends AbstractActor {
                 System.out.println("Price = " + response2.getPrice());
                 response = response2;
             }
-            priceResponses.remove(response1);
-            priceResponses.remove(response2);
             return response;
-        }
-        else if(priceResponses.size() == 1){
-            PriceResponse response = priceResponses.get(0);
-            System.out.println("Price = " + response.getPrice());
-            priceResponses.remove(priceResponses.get(0));
-            return response;
-        }
-        else {
-            return new PriceResponse(request.getProduct(), -1);
         }
     }
 

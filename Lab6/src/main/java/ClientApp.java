@@ -13,23 +13,32 @@ public class ClientApp {
 
     public static void main(String[] args) throws Exception {
 
-        // config
-        File configFile = new File("src/main/client_app.conf");
-        Config config = ConfigFactory.parseFile(configFile);
+        System.out.println("Enter client port:");
+        // interaction
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        String port = br.readLine();
+
+        String conf1 = "akka {\n" +
+                "  actor {\n provider = remote\n" +
+                "        serializers {\n proto = \"akka.remote.serialization.ProtobufSerializer\"\n}\n" +
+                "        serialization-bindings {\n \"PriceRequest\" = proto\n \"PriceResponse\" = proto\n }}\n" +
+                "  remote.artery {\n canonical {\n hostname = \"127.0.0.1\"\n port = ";
+        String conf2 = "}}}";
+
+        String configString = conf1 + port + conf2;
+        Config config = ConfigFactory.parseString(configString);
 
         // create actor system & actors
         final ActorSystem system = ActorSystem.create("client_system", config);
         final ActorRef client = system.actorOf(Props.create(Client.class), "client");
 
         System.out.println("Enter product name to find out what is the best price, or 'q' to quit");
-        // interaction
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         while (true) {
             String line = br.readLine();
             if (line.equals("q")) {
                 break;
             }
-            PriceRequest request = new PriceRequest(line);
+            PriceRequest request = new PriceRequest(port, -1, line);
             client.tell(request, null);
         }
         system.terminate();
