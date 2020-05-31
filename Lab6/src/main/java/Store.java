@@ -19,8 +19,7 @@ public class Store extends AbstractActor {
                     PriceResponse response = new PriceResponse(request.getProduct(), value);
                     getSender().tell(response, getSelf());
                 })
-                .matchAny(o -> log.info("Strore: received unknown message: " + o))
+                .matchAny(o -> log.info("Store: received unknown message: " + o))
                 .build();
     }
-
 }

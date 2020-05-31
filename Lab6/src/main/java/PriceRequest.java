@@ -14,10 +14,6 @@ public class PriceRequest implements Serializable {
         return product;
     }
 
-    public void setProduct(String product) {
-        this.product = product;
-    }
-
     public byte[] toByteArray(){
         return (product).getBytes();
     }

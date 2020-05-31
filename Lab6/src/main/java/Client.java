@@ -18,7 +18,12 @@ public class Client extends AbstractActor {
                 })
                 .match(PriceResponse.class, response -> {
                     log.info("Client received response: " + response);
-                    System.out.println("Price for " + response.getProduct() + ": " + response.getPrice() + "PLN");
+                    String product = response.getProduct();
+                    int price = response.getPrice();
+                    if(price == -1){
+                        System.out.println("No information about price of: " + product);
+                    }
+                    else System.out.println("Price for " + product + ": " + price + "PLN");
                 })
                 .matchAny(o -> log.info("Client: Received unknown message: " + o))
                 .build();

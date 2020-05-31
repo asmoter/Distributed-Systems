@@ -32,7 +32,6 @@ public class ClientApp {
             PriceRequest request = new PriceRequest(line);
             client.tell(request, null);
         }
-
         system.terminate();
     }
 }
