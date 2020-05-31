@@ -1,7 +1,12 @@
-/home/asmoter/Dokumenty/Rozprochy/Lab6/src/main/java/Store.java
-/home/asmoter/Dokumenty/Rozprochy/Lab6/src/main/java/PriceResponse.java
-/home/asmoter/Dokumenty/Rozprochy/Lab6/src/main/java/Client.java
+/home/asmoter/Dokumenty/Rozprochy/Lab6/src/main/java/DataBase/DBManager3.java
+/home/asmoter/Dokumenty/Rozprochy/Lab6/src/main/java/Messages/PriceRequest.java
+/home/asmoter/Dokumenty/Rozprochy/Lab6/src/main/java/Actors/Client.java
+/home/asmoter/Dokumenty/Rozprochy/Lab6/src/main/java/Messages/PriceResponse.java
+/home/asmoter/Dokumenty/Rozprochy/Lab6/src/main/java/Messages/DatabaseResponse.java
+/home/asmoter/Dokumenty/Rozprochy/Lab6/src/main/java/Actors/Server.java
+/home/asmoter/Dokumenty/Rozprochy/Lab6/src/main/java/Actors/DbHandler.java
+/home/asmoter/Dokumenty/Rozprochy/Lab6/src/main/java/Actors/Store.java
+/home/asmoter/Dokumenty/Rozprochy/Lab6/src/main/java/DataBase/DBManager.java
 /home/asmoter/Dokumenty/Rozprochy/Lab6/src/main/java/ClientApp.java
-/home/asmoter/Dokumenty/Rozprochy/Lab6/src/main/java/PriceRequest.java
 /home/asmoter/Dokumenty/Rozprochy/Lab6/src/main/java/ServerApp.java
-/home/asmoter/Dokumenty/Rozprochy/Lab6/src/main/java/Server.java
+/home/asmoter/Dokumenty/Rozprochy/Lab6/src/main/java/Actors/DbQueryHandler.java

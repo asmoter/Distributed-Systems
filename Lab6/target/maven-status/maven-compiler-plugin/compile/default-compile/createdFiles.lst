@@ -1,4 +1,7 @@
 ClientApp.class
-Client.class
+Actors/DbHandler.class
+DataBase/DBManager.class
+DataBase/DBManager3.class
 ServerApp.class
-Server.class
+Messages/DatabaseResponse.class
+Actors/DbQueryHandler.class

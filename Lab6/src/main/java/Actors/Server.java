@@ -1,11 +1,13 @@
 package Actors;
 
+import Messages.DatabaseResponse;
 import Messages.PriceRequest;
 import Messages.PriceResponse;
 import akka.actor.*;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +18,7 @@ public class Server extends AbstractActor {
 
     private int requestID = 0;
     Map<Integer, List<PriceResponse>> Responses = new HashMap<>();
+    Map<String, Integer>  DatabaseResponses = new HashMap<>();
 
     @Override
     public Receive createReceive() {
@@ -27,17 +30,23 @@ public class Server extends AbstractActor {
 
                     context().child("store1").get().tell(request, getSelf());
                     context().child("store2").get().tell(request, getSelf());
+                    context().child("dataBase").get().tell(request, getSelf());
 
                     getContext().system().scheduler()
-                            .scheduleOnce(java.time.Duration.ofMillis(300), () ->
+                            .scheduleOnce(Duration.ofMillis(300), () ->
                                 client.tell(returnPrice(request), getSelf()),
                                 context().system().dispatcher());
 
                     requestID++;
+                    System.out.println("Current query counter: " + request.getProduct() + " -> " + DatabaseResponses.get(request.getProduct()));
                 })
                 .match(PriceResponse.class, response -> {
                     log.info("Received response for client" + response.getClientID() + " -> "+ response.getProduct() + ": " + response.getPrice());
                     addResponse(response);
+                })
+                .match(DatabaseResponse.class, response -> {
+                    log.info("Received response from database. Query counter for " + response.getProduct() + " -> " + response.getQueryCounter());
+                    addDatabaseResponse(response);
                 })
                 .matchAny(o -> log.info("Actors.Server: received unknown message: " + o))
                 .build();
@@ -52,6 +61,15 @@ public class Server extends AbstractActor {
         }
         responses.add(response);
         Responses.put(response.getRequestID(), responses);
+    }
+
+    private void addDatabaseResponse(DatabaseResponse response){
+        if(DatabaseResponses.containsKey(response.getProduct())){
+            int currentQueryCounter = DatabaseResponses.get(response.getProduct());
+            DatabaseResponses.put(response.getProduct(), ++currentQueryCounter);
+        } else{
+            DatabaseResponses.put(response.getProduct(), 1);
+        }
     }
 
     private PriceResponse returnPrice(PriceRequest request){
@@ -80,9 +98,13 @@ public class Server extends AbstractActor {
 
     @Override
     public void preStart() throws Exception {
+
+        
+
         super.preStart();
         context().actorOf(Props.create(Store.class), "store1");
         context().actorOf(Props.create(Store.class), "store2");
+        context().actorOf(Props.create(DbHandler.class), "dataBase");
     }
 }
 
