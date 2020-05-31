@@ -1,9 +1,6 @@
 import akka.actor.*;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import akka.japi.pf.DeciderBuilder;
-import scala.concurrent.Future;
-import scala.concurrent.duration.Duration;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,8 +11,6 @@ public class Server extends AbstractActor {
     private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
 
     private int requestID = 0;
-    Map<String, ActorRef> clients = new HashMap<>();
-    Map<Integer, PriceRequest> Requests = new HashMap<>();
     Map<Integer, List<PriceResponse>> Responses = new HashMap<>();
 
     @Override
@@ -25,8 +20,6 @@ public class Server extends AbstractActor {
                     log.info("Received request from client" + request.getClientID() + ". What is the price of: " + request.getProduct());
                     ActorRef client = getSender();
                     request.setRequestID(requestID);
-                    clients.put(request.getClientID(), client);
-//                    Requests.put(requestID, request);
 
                     context().child("store1").get().tell(request, getSelf());
                     context().child("store2").get().tell(request, getSelf());
@@ -51,13 +44,14 @@ public class Server extends AbstractActor {
         if(Responses.containsKey(response.getRequestID())){
             responses = Responses.get(response.getRequestID());
         } else {
-            responses = new ArrayList<PriceResponse>();
+            responses = new ArrayList<>();
         }
         responses.add(response);
         Responses.put(response.getRequestID(), responses);
     }
 
     private PriceResponse returnPrice(PriceRequest request){
+        System.out.println("~~~ Inside returnPrice for client: " + request.getClientID() + " ->  " + request.getProduct() + " request ID =  " + request.getRequestID() + "  ~~~");
 
         List<PriceResponse> priceResponses = Responses.get(request.getRequestID());
 
@@ -70,29 +64,14 @@ public class Server extends AbstractActor {
             return response;
         }
         else{
-            PriceResponse response;
-            PriceResponse response1 = priceResponses.get(0);
-            PriceResponse response2 = priceResponses.get(1);
-            if(response1.getPrice() < response2.getPrice()){
-                System.out.println("Price = " + response1.getPrice());
-                response = response1;
+            if(priceResponses.get(0).getPrice() < priceResponses.get(1).getPrice()){
+                System.out.println("Price = " + priceResponses.get(0).getPrice());
+                return priceResponses.get(0);
+            } else{
+                System.out.println("Price = " + priceResponses.get(1).getPrice());
+                return priceResponses.get(1);
             }
-            else{
-                System.out.println("Price = " + response2.getPrice());
-                response = response2;
-            }
-            return response;
         }
-    }
-
-    private static final SupervisorStrategy strategy
-            = new OneForOneStrategy(10, Duration.create("1 minute"), DeciderBuilder.
-            matchAny(o -> (SupervisorStrategy.Directive) SupervisorStrategy.resume()).
-            build());
-
-    @Override
-    public SupervisorStrategy supervisorStrategy() {
-        return strategy;
     }
 
     @Override
@@ -101,7 +80,6 @@ public class Server extends AbstractActor {
         context().actorOf(Props.create(Store.class), "store1");
         context().actorOf(Props.create(Store.class), "store2");
     }
-
 }
 
 
