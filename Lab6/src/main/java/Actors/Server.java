@@ -6,7 +6,12 @@ import Messages.PriceResponse;
 import akka.actor.*;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import org.sqlite.SQLiteConfig;
+import org.sqlite.SQLiteOpenMode;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,6 +25,8 @@ public class Server extends AbstractActor {
     Map<Integer, List<PriceResponse>> Responses = new HashMap<>();
     Map<String, Integer>  DatabaseResponses = new HashMap<>();
 
+    ActorRef dataBase = getContext().actorOf(Props.create(DbHandler.class));
+
     @Override
     public Receive createReceive() {
         return receiveBuilder()
@@ -30,7 +37,8 @@ public class Server extends AbstractActor {
 
                     context().child("store1").get().tell(request, getSelf());
                     context().child("store2").get().tell(request, getSelf());
-                    context().child("dataBase").get().tell(request, getSelf());
+                    dataBase.tell(request, getSelf());
+//                    context().child("dataBase").get().tell(request, getSelf());
 
                     getContext().system().scheduler()
                             .scheduleOnce(Duration.ofMillis(300), () ->
@@ -47,6 +55,8 @@ public class Server extends AbstractActor {
                 .match(DatabaseResponse.class, response -> {
                     log.info("Received response from database. Query counter for " + response.getProduct() + " -> " + response.getQueryCounter());
                     addDatabaseResponse(response);
+                    System.out.println("--- Current query counter: " + response.getProduct() + " -> " + DatabaseResponses.get(response.getProduct()));
+
                 })
                 .matchAny(o -> log.info("Actors.Server: received unknown message: " + o))
                 .build();
@@ -99,12 +109,26 @@ public class Server extends AbstractActor {
     @Override
     public void preStart() throws Exception {
 
-        
-
-        super.preStart();
         context().actorOf(Props.create(Store.class), "store1");
         context().actorOf(Props.create(Store.class), "store2");
-        context().actorOf(Props.create(DbHandler.class), "dataBase");
+//        context().actorOf(Props.create(DbHandler.class), "dataBase");
+
+        Class.forName("org.sqlite.JDBC");
+        SQLiteConfig config = new SQLiteConfig();
+        config.setOpenMode(SQLiteOpenMode.FULLMUTEX);
+        Connection connection = DriverManager.getConnection("jdbc:sqlite:ProductsDB.db", config.toProperties());
+//        connection.setAutoCommit(true);
+
+        Statement statement = connection.createStatement();
+        String query = "create table if not exists Products " +
+                "(ProductName varchar(256) primary key not null, " +
+                "QueryCounter int not null)";
+
+        statement.executeUpdate(query);
+        statement.close();
+        connection.close();
+
+        log.info("Succesfully created database Products");
     }
 }
 
