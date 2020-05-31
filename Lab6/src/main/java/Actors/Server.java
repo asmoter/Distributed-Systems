@@ -1,3 +1,7 @@
+package Actors;
+
+import Messages.PriceRequest;
+import Messages.PriceResponse;
 import akka.actor.*;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -35,7 +39,7 @@ public class Server extends AbstractActor {
                     log.info("Received response for client" + response.getClientID() + " -> "+ response.getProduct() + ": " + response.getPrice());
                     addResponse(response);
                 })
-                .matchAny(o -> log.info("Server: received unknown message: " + o))
+                .matchAny(o -> log.info("Actors.Server: received unknown message: " + o))
                 .build();
     }
 

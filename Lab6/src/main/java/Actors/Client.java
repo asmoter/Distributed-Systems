@@ -1,3 +1,7 @@
+package Actors;
+
+import Messages.PriceRequest;
+import Messages.PriceResponse;
 import akka.actor.AbstractActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -16,7 +20,7 @@ public class Client extends AbstractActor {
                     log.info("Sending price request for: " + request.getProduct());
                 })
                 .match(PriceResponse.class, response -> {
-                    log.info("Client received response: " + response);
+                    log.info("Actors.Client received response: " + response);
                     String product = response.getProduct();
                     int price = response.getPrice();
                     if(price == -1){
@@ -24,7 +28,7 @@ public class Client extends AbstractActor {
                     }
                     else System.out.println("Price for " + product + ": " + price + "PLN");
                 })
-                .matchAny(o -> log.info("Client: Received unknown message: " + o))
+                .matchAny(o -> log.info("Actors.Client: Received unknown message: " + o))
                 .build();
     }
 }

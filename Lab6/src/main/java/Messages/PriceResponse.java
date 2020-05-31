@@ -1,3 +1,5 @@
+package Messages;
+
 import java.io.Serializable;
 
 public class PriceResponse implements Serializable {
@@ -16,7 +18,7 @@ public class PriceResponse implements Serializable {
 
     @Override
     public String toString() {
-        return "PriceResponse{ price = " + price + ", product = " + product + "}";
+        return "Messages.PriceResponse{ price = " + price + ", product = " + product + "}";
     }
 
     public String getClientID(){

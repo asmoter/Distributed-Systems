@@ -1,3 +1,5 @@
+package Messages;
+
 import java.io.Serializable;
 
 public class PriceRequest implements Serializable {

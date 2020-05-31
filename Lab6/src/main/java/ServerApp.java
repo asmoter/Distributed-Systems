@@ -1,3 +1,4 @@
+import Actors.Server;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -19,7 +20,7 @@ public class ServerApp {
         final ActorSystem system = ActorSystem.create("server_system", config);
         final ActorRef server = system.actorOf(Props.create(Server.class), "server");
 
-        System.out.println("Server started...");
+        System.out.println("Actors.Server started...");
 
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         while (true) {

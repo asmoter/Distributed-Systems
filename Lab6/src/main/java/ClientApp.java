@@ -1,3 +1,5 @@
+import Actors.Client;
+import Messages.PriceRequest;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -5,7 +7,6 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.InputStreamReader;
 
 public class ClientApp {
@@ -21,7 +22,7 @@ public class ClientApp {
         String conf1 = "akka {\n" +
                 "  actor {\n provider = remote\n" +
                 "        serializers {\n proto = \"akka.remote.serialization.ProtobufSerializer\"\n}\n" +
-                "        serialization-bindings {\n \"PriceRequest\" = proto\n \"PriceResponse\" = proto\n }}\n" +
+                "        serialization-bindings {\n \"Messages.PriceRequest\" = proto\n \"Messages.PriceResponse\" = proto\n }}\n" +
                 "  remote.artery {\n canonical {\n hostname = \"127.0.0.1\"\n port = ";
         String conf2 = "}}}";
 
