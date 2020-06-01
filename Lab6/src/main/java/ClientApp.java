@@ -15,21 +15,20 @@ public class ClientApp {
     public static void main(String[] args) throws Exception {
 
         System.out.println("Enter client port:");
-        // interaction
+
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         String port = br.readLine();
 
         String conf1 = "akka {\n" +
                 "  actor {\n provider = remote\n" +
                 "        serializers {\n proto = \"akka.remote.serialization.ProtobufSerializer\"\n}\n" +
-                "        serialization-bindings {\n \"Messages.PriceRequest\" = proto\n \"Messages.PriceResponse\" = proto\n }}\n" +
+                "        serialization-bindings {\n \"Messages.PriceRequest\" = proto\n \"Messages.PriceResponse\" = proto\n \"Messages.DatabaseResponse\" = proto\n}}\n" +
                 "  remote.artery {\n canonical {\n hostname = \"127.0.0.1\"\n port = ";
         String conf2 = "}}}";
 
         String configString = conf1 + port + conf2;
         Config config = ConfigFactory.parseString(configString);
 
-        // create actor system & actors
         final ActorSystem system = ActorSystem.create("client_system", config);
         final ActorRef client = system.actorOf(Props.create(Client.class), "client");
 

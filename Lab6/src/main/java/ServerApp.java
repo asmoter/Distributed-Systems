@@ -12,15 +12,13 @@ public class ServerApp {
 
     public static void main(String[] args) throws Exception {
 
-        // config
         File configFile = new File("src/main/server_app.conf");
         Config config = ConfigFactory.parseFile(configFile);
 
-        // create actor system & actors
         final ActorSystem system = ActorSystem.create("server_system", config);
         final ActorRef server = system.actorOf(Props.create(Server.class), "server");
 
-        System.out.println("Actors.Server started...");
+        System.out.println("Server started...");
 
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         while (true) {
@@ -29,7 +27,6 @@ public class ServerApp {
                 break;
             }
         }
-
         system.terminate();
     }
 }

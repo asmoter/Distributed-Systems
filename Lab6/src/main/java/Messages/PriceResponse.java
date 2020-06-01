@@ -16,11 +16,6 @@ public class PriceResponse implements Serializable {
         this.price = price;
     }
 
-    @Override
-    public String toString() {
-        return "Messages.PriceResponse{ price = " + price + ", product = " + product + "}";
-    }
-
     public String getClientID(){
         return clientID;
     }

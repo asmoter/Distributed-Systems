@@ -1,6 +1,7 @@
 package Actors;
 
 import Messages.DatabaseResponse;
+import Messages.PriceRequest;
 import akka.actor.AbstractActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -14,45 +15,45 @@ public class DbQueryHandler extends AbstractActor {
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .match(DatabaseResponse.class, request -> {
+                .match(PriceRequest.class, request -> {
                     getSender().tell(updateDataBase(request.getProduct()), getSelf());
                 })
-                .matchAny(o -> log.info("Actors.Client: Received unknown message: " + o))
+                .matchAny(o -> log.info("Client: Received unknown message: " + o))
                 .build();
     }
 
-    private Integer updateDataBase(String productName) throws SQLException {
+    private DatabaseResponse updateDataBase(String productName) throws SQLException {
         Connection connection = null;
         Statement statement = null;
 
         try{
-            Class.forName("org.sqlite.JDBC"); //
-            connection = DriverManager.getConnection("jdbc:sqlite:products.db"); //
+            Class.forName("org.sqlite.JDBC");
+            connection = DriverManager.getConnection("jdbc:sqlite:ProductsDB.db");
             connection.setAutoCommit(true); //
-            statement = connection.createStatement(); //
+            statement = connection.createStatement();
 
-            ResultSet resultSet = statement.executeQuery("SELECT COUNT(*) FROM PRODUCT_NAME WHERE name = '" + productName + "'"); //
+            ResultSet resultSet = statement.executeQuery("SELECT COUNT(*) FROM Products WHERE ProductName = '" + productName + "'"); //
             resultSet.next();
             int counter = resultSet.getInt("COUNT(*)");
 
             String query = "";
 
             if(counter == 0){
-                query = "INSERT INTO PRODUCT_QUERY (PRODUCT_NAME, QUERY_COUNTER) VALUES ('" + productName + "', 1)";
+                query = "INSERT INTO Products (ProductName, QueryCounter) VALUES ('" + productName + "', 1)";
                 statement.executeUpdate(query);
             } else {
-                query = "SELECT * FROM PRODUCT_QUERY WHERE PRODUCT_NAME='" + productName + "'";
+                query = "SELECT * FROM Products WHERE ProductName ='" + productName + "'";
                 resultSet = statement.executeQuery(query);
-                int currentNumber = resultSet.getInt("QUERY_COUNTER");
+                int currentNumber = resultSet.getInt("QueryCounter");
 
-                query = "UPDATE PRODUCT_QUERY SET QUERY_COUNTER=" + (++currentNumber) + " WHERE PRODUCT_NAME='" + productName + "'";
+                query = "UPDATE Products SET QueryCounter =" + (++currentNumber) + " WHERE ProductName ='" + productName + "'";
                 statement.executeUpdate(query);
             }
 
-            query = "SELECT QUERY_COUNTER FROM PRODUCT_QUERY WHERE PRODUCT_NAME='" + productName + "'";
+            query = "SELECT QueryCounter FROM Products WHERE ProductName ='" + productName + "'";
             resultSet = statement.executeQuery(query);
 
-            return resultSet.getInt("QUERY_COUNTER");
+            return new DatabaseResponse(productName, resultSet.getInt("QueryCounter"));
 
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
@@ -60,8 +61,6 @@ public class DbQueryHandler extends AbstractActor {
             statement.close();
             connection.close();
         }
-
         return null;
     }
-
 }

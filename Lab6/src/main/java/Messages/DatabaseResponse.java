@@ -18,4 +18,14 @@ public class DatabaseResponse {
         return queryCounter;
     }
 
+    public byte[] toByteArray(){
+        return (product + ";" + queryCounter).getBytes();
+    }
+
+    public static DatabaseResponse parseFrom(byte[] arr) throws Exception{
+        String content = new String(arr);
+        String[] response = content.split(";");
+        return new DatabaseResponse(response[0], Integer.parseInt(response[1]));
+    }
+
 }
