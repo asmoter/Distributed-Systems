@@ -11,7 +11,6 @@ import java.io.InputStreamReader;
 
 public class ClientApp {
 
-
     public static void main(String[] args) throws Exception {
 
         System.out.println("Enter client port:");
