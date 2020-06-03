@@ -31,6 +31,7 @@ public class ClientApp {
         final ActorSystem system = ActorSystem.create("client_system", config);
         final ActorRef client = system.actorOf(Props.create(Client.class), "client");
 
+
         System.out.println("Enter product name to find out what is the best price, or 'q' to quit");
         while (true) {
             String line = br.readLine();

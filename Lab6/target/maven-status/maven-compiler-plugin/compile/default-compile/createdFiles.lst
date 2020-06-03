@@ -1,7 +1,10 @@
 ClientApp.class
-Actors/DbHandler.class
-DataBase/DBManager.class
-DataBase/DBManager3.class
+Actors/Server.class
+Http/HttpServer.class
+Actors/Store.class
 ServerApp.class
+Messages/PriceResponse.class
+Actors/Client.class
+Messages/PriceRequest.class
 Messages/DatabaseResponse.class
 Actors/DbQueryHandler.class

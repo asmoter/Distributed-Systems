@@ -1,4 +1,5 @@
 import Actors.Server;
+import Http.HttpServer;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -17,6 +18,9 @@ public class ServerApp {
 
         final ActorSystem system = ActorSystem.create("server_system", config);
         final ActorRef server = system.actorOf(Props.create(Server.class), "server");
+
+        final HttpServer httpServer = new HttpServer(system, server);
+        httpServer.startServer("localhost", 8080, system);
 
         System.out.println("Server started...");
 
