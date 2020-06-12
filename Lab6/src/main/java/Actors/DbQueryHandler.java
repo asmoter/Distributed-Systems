@@ -36,7 +36,7 @@ public class DbQueryHandler extends AbstractActor {
             resultSet.next();
             int counter = resultSet.getInt("COUNT(*)");
 
-            String query = "";
+            String query;
 
             if(counter == 0){
                 query = "INSERT INTO Products (ProductName, QueryCounter) VALUES ('" + productName + "', 1)";

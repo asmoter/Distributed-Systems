@@ -35,19 +35,19 @@ public class Server extends AbstractActor {
                     ActorRef client = getSender();
                     request.setRequestID(requestID);
 
+                    dataBase.tell(request, getSelf());
                     context().child("store1").get().tell(request, getSelf());
                     context().child("store2").get().tell(request, getSelf());
-                    dataBase.tell(request, getSelf());
+
+                    getContext().system().scheduler()
+                            .scheduleOnce(Duration.ofMillis(500), () ->
+                                            client.tell(returnQueryNumber(request), getSelf()),
+                                    context().system().dispatcher());
 
                     getContext().system().scheduler()
                             .scheduleOnce(Duration.ofMillis(300), () ->
                                 client.tell(returnPrice(request), getSelf()),
                                 context().system().dispatcher());
-
-                    getContext().system().scheduler()
-                            .scheduleOnce(Duration.ofMillis(500), () ->
-                                    client.tell(returnQueryNumber(request), getSelf()),
-                                    context().system().dispatcher());
 
                     requestID++;
                 })
@@ -58,7 +58,6 @@ public class Server extends AbstractActor {
                 .match(DatabaseResponse.class, response -> {
                     log.info("Received response from database. Query counter for " + response.getProduct() + " -> " + response.getQueryCounter());
                     updateDatabaseResponses(response);
-
                 })
                 .matchAny(o -> log.info("Server: received unknown message: " + o))
                 .build();
@@ -90,7 +89,7 @@ public class Server extends AbstractActor {
             int currentQueryCounter = DatabaseResponses.get(response.getProduct());
             DatabaseResponses.put(response.getProduct(), ++currentQueryCounter);
         } else{
-            DatabaseResponses.put(response.getProduct(), 1);
+            DatabaseResponses.put(response.getProduct(), response.getQueryCounter());
         }
     }
 
@@ -104,15 +103,12 @@ public class Server extends AbstractActor {
             }
             else if(priceResponses.size() == 1){
                 PriceResponse response = priceResponses.get(0);
-//                System.out.println("Price = " + response.getPrice());
                 return response;
             }
             else{
                 if(priceResponses.get(0).getPrice() < priceResponses.get(1).getPrice()){
-//                    System.out.println("Price = " + priceResponses.get(0).getPrice());
                     return priceResponses.get(0);
                 } else{
-//                    System.out.println("Price = " + priceResponses.get(1).getPrice());
                     return priceResponses.get(1);
                 }
             }

@@ -82,11 +82,9 @@ public class HttpServer extends HttpApp {
         return onSuccess(result, res -> complete(StatusCodes.OK, res.toString(), Jackson.marshaller()));
     }
 
-
     private String getProductURL(String product){
         return String.format("https://www.opineo.pl/?szukaj=%s&s=2", product);
     }
-
 
     private String parseReview(String rawHtml){
         return  Jsoup.parse(rawHtml).body()
